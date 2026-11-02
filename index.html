@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="NOTIX: organiza tus tareas pendientes y lleva un registro de las completadas.">
+  <title>NOTIX | Tu semestre, bajo control</title>
+  <link rel="stylesheet" href="estilos.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header class="encabezado">
+    <div class="contenedor barra">
+      <a class="marca" href="#pendientes" aria-label="NOTIX, ir a pendientes">
+        <span class="marca-icono" aria-hidden="true">✓</span>
+        <span>NOTIX<span class="marca-punto">.</span></span>
+      </a>
+      <nav class="menu-principal" aria-label="Secciones de NOTIX">
+        <a href="#pendientes" class="enlace-menu activo" data-vista="pendientes" aria-current="page">
+          Pendientes <span class="numero-menu" id="menuPendientes">0</span>
+        </a>
+        <a href="#completadas" class="enlace-menu" data-vista="completadas">
+          Completadas <span class="numero-menu" id="menuCompletadas">0</span>
+        </a>
+      </nav>
+      <span class="texto-fecha" id="fechaActual"></span>
+    </div>
+  </header>
+
+  <main class="contenedor" id="inicio">
+    <div class="vista" id="vistaPendientes">
+    <section class="bienvenida" aria-labelledby="tituloPrincipal">
+      <div>
+        <span class="etiqueta-superior">ORGANIZADOR ACADÉMICO</span>
+        <h1 id="tituloPrincipal">Tus pendientes, <span>bajo control.</span></h1>
+        <p>Organiza tus entregas sin enredos. Cuando completes una tarea, pasará a la sección Completadas.</p>
+      </div>
+      <div class="nota-bienvenida">
+        <span class="nota-icono" aria-hidden="true">✦</span>
+        <p>Un poquito de orden<br><strong>hace la diferencia.</strong></p>
+      </div>
+    </section>
+
+    <section class="resumen" aria-label="Resumen de tareas">
+      <article class="resumen-tarjeta">
+        <span class="resumen-nombre">Total de tareas</span>
+        <strong id="totalTareas">0</strong>
+        <span class="resumen-pie">Todas las actividades</span>
+      </article>
+      <article class="resumen-tarjeta">
+        <span class="resumen-nombre">Por hacer</span>
+        <strong id="tareasPendientes">0</strong>
+        <span class="resumen-pie">Sin completar todavía</span>
+      </article>
+      <article class="resumen-tarjeta">
+        <span class="resumen-nombre">Terminadas</span>
+        <strong id="tareasTerminadas">0</strong>
+        <span class="resumen-pie">¡Buen trabajo!</span>
+      </article>
+      <article class="resumen-tarjeta resumen-avance">
+        <span class="resumen-nombre">Tu avance</span>
+        <strong id="porcentajeAvance">0%</strong>
+        <div class="barra-progreso" role="progressbar" aria-label="Porcentaje de tareas completadas" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="barraAvance">
+          <span id="progresoRelleno"></span>
+        </div>
+      </article>
+    </section>
+
+    <div class="columnas">
+      <section class="panel panel-formulario" aria-labelledby="tituloFormulario">
+        <div class="panel-encabezado">
+          <div>
+            <span class="panel-subtitulo">PASO 1</span>
+            <h2 id="tituloFormulario">Nueva actividad</h2>
+          </div>
+          <span class="circulo-decorativo" aria-hidden="true">+</span>
+        </div>
+        <p class="texto-ayuda">Registra una tarea para no olvidarte de ella.</p>
+
+        <form id="formularioTarea">
+          <div class="campo">
+            <label for="tituloTarea">Nombre de la tarea <span>*</span></label>
+            <input type="text" id="tituloTarea" maxlength="80" placeholder="Ej. Terminar trabajo Calculo" required>
+          </div>
+          <div class="campo">
+            <label for="materiaTarea">Materia o curso <span>*</span></label>
+            <input type="text" id="materiaTarea" maxlength="50" placeholder="Ej. Programación web" required>
+          </div>
+          <div class="campo">
+            <label for="fechaTarea">Fecha de entrega <span>*</span></label>
+            <input type="date" id="fechaTarea" required>
+          </div>
+          <div class="campo">
+            <label for="prioridadTarea">Prioridad</label>
+            <select id="prioridadTarea">
+              <option value="Media">Media</option>
+              <option value="Alta">Alta</option>
+              <option value="Baja">Baja</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label for="detalleTarea">Descripción <span class="opcional">(opcional)</span></label>
+            <textarea id="detalleTarea" rows="3" maxlength="180" placeholder="Un detalle que quieras recordar..."></textarea>
+          </div>
+          <button class="boton boton-principal" type="submit" id="botonGuardar">+ Guardar actividad</button>
+          <button class="boton boton-cancelar oculto" type="button" id="botonCancelar">Cancelar edición</button>
+          <p id="mensajeFormulario" class="mensaje-formulario" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="panel panel-listado" aria-labelledby="tituloListado">
+        <div class="panel-encabezado listado-cabecera">
+          <div>
+            <span class="panel-subtitulo">MI LISTA</span>
+            <h2 id="tituloListado">Tareas pendientes</h2>
+          </div>
+          <a href="#completadas" class="boton-texto">Ver completadas →</a>
+        </div>
+        <p class="texto-ayuda">Aquí aparecen solamente las actividades que todavía tienes por hacer.</p>
+
+        <div class="herramientas">
+          <label for="buscadorTareas" class="solo-lectores">Buscar tarea pendiente</label>
+          <input type="search" id="buscadorTareas" placeholder="Buscar entre mis pendientes...">
+        </div>
+
+        <div id="listaTareas" class="lista-tareas" aria-live="polite"></div>
+        <p class="nota-guardado">🔒 Las tareas se guardan en este navegador, incluso si cierras la página.</p>
+      </section>
+    </div>
+    </div>
+
+    <section class="vista vista-completadas oculto" id="vistaCompletadas" aria-labelledby="tituloCompletadas">
+      <div class="cabecera-completadas">
+        <div>
+          <span class="etiqueta-superior">MI HISTORIAL</span>
+          <h1 id="tituloCompletadas">Lo que ya <span>lograste.</span></h1>
+          <p>Las actividades terminadas quedan guardadas aquí. Si necesitas corregir algo, puedes reabrirlas.</p>
+        </div>
+        <div class="recuento-completadas">
+          <strong id="cantidadCompletadas">0</strong>
+          <span>actividades completadas</span>
+        </div>
+      </div>
+
+      <section class="panel panel-archivo" aria-labelledby="tituloArchivo">
+        <div class="panel-encabezado listado-cabecera">
+          <div>
+            <span class="panel-subtitulo">REGISTRO</span>
+            <h2 id="tituloArchivo">Tareas completadas</h2>
+          </div>
+          <button type="button" id="botonLimpiar" class="boton-texto" title="Eliminar tareas completadas">Limpiar historial</button>
+        </div>
+        <p class="texto-ayuda">Estas tareas ya no aparecen en tu lista de pendientes.</p>
+        <div class="herramientas">
+          <label for="buscadorCompletadas" class="solo-lectores">Buscar tarea completada</label>
+          <input type="search" id="buscadorCompletadas" placeholder="Buscar entre las completadas...">
+        </div>
+        <div id="listaCompletadas" class="lista-tareas" aria-live="polite"></div>
+        <a class="volver-pendientes" href="#pendientes">← Volver a mis pendientes</a>
+      </section>
+    </section>
+  </main>
+
+  <footer class="pie-pagina">
+    <div class="contenedor">
+      <span>NOTIX</span>
+      <span>Derechos Reservados estudiantes UdeCataluña</span>
+    </div>
+  </footer>
+</body>
+</html>
