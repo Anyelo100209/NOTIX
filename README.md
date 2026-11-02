@@ -23,4 +23,4 @@ Proyecto final grupal de JavaScript. Aplicación académica con dos secciones in
 
 ## URL publicada
 
-Pendiente de agregar cuando lo publiquemos a GitHub
+(https://github.com/Anyelo100209/NOTIX)
