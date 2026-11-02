@@ -135,3 +135,36 @@ h2 { font-size: 21px; letter-spacing: -.5px; margin: 8px 0 0; }
 .pie-pagina .contenedor { display: flex; justify-content: space-between; gap: 10px; }
 @media (max-width: 900px) { .panel-archivo .lista-tareas { grid-template-columns: 1fr; } .columnas { grid-template-columns: 1fr; } .resumen { grid-template-columns: repeat(2, 1fr); } .bienvenida { padding-top: 35px; } }
 @media (max-width: 600px) { .barra { flex-wrap: wrap; padding: 13px 0; } .menu-principal { order: 3; width: 100%; } .enlace-menu { flex: 1; justify-content: center; padding: 10px 7px; } .cabecera-completadas { display: block; } .recuento-completadas { margin-top: 20px; text-align: left; display: flex; align-items: center; gap: 12px; min-width: 0; padding: 13px 18px; } .recuento-completadas strong { font-size: 29px; margin: 0; } .vista-completadas { padding-top: 28px; } .contenedor { width: calc(100% - 28px); } .texto-fecha { font-size: 11px; } .bienvenida { display: block; padding: 29px 0 23px; } .nota-bienvenida { display: none; } h1 { font-size: 30px; } .resumen { gap: 9px; } .resumen-tarjeta { padding: 15px; min-height: 129px; } .resumen-tarjeta strong { font-size: 27px; } .panel { padding: 20px 16px; } .herramientas { display: block; } #buscadorTareas { margin-bottom: 10px; } .filtros { justify-content: space-between; } .filtro { flex: 1; } .listado-cabecera { align-items: start; flex-wrap: wrap; } .boton-texto { text-align: right; } .tarea-pie { align-items: start; } .pie-pagina .contenedor { display: block; } .pie-pagina span { display: block; margin-bottom: 6px; } }
+
+
+/* Registro e inicio de sesión de demostración */
+.pantalla-acceso { min-height: 100vh; display: grid; grid-template-columns: minmax(320px, 45%) 1fr; }
+.acceso-presentacion { background: linear-gradient(145deg, #12214b, #2345a8); color: white; padding: clamp(30px, 5vw, 75px); display: flex; flex-direction: column; justify-content: space-between; gap: 70px; }
+.marca-acceso { color: white; align-self: flex-start; }
+.marca-acceso .marca-icono { background: #ffffff26; }
+.marca-acceso .marca-punto { color: #85b2ff; }
+.acceso-presentacion h1 { font-size: clamp(37px, 4vw, 58px); line-height: 1.1; margin: 18px 0; }
+.acceso-presentacion h1 span { color: #a7c5ff; }
+.acceso-presentacion p { max-width: 340px; color: #d8e4ff; line-height: 1.6; }
+.acceso-presentacion small { color: #c6d6ff; }
+.etiqueta-clara { color: #a9c6ff; }
+.acceso-beneficios { display: flex; flex-direction: column; gap: 13px; margin-top: 38px; font-size: 13px; color: #e1eaff; }
+.acceso-contenedor { padding: 35px 20px; display: flex; align-items: center; justify-content: center; }
+.acceso-tarjeta { width: min(100%, 440px); background: white; border: 1px solid var(--borde); border-radius: 22px; padding: clamp(23px, 4vw, 39px); box-shadow: 0 20px 50px #1f31550b; }
+.acceso-etiqueta { font-size: 11px; letter-spacing: 1.7px; font-weight: bold; color: var(--azul); }
+.acceso-tarjeta h2 { font-size: 30px; margin: 7px 0 9px; }
+.acceso-ayuda { color: var(--gris); font-size: 14px; margin: 0 0 24px; }
+.acceso-pestanas { display: flex; gap: 5px; padding: 5px; background: #f0f3f9; border-radius: 12px; margin: 0 0 25px; }
+.acceso-pestana { border: 0; background: transparent; color: var(--gris); flex: 1; padding: 11px 7px; border-radius: 9px; font-size: 13px; font-weight: bold; }
+.acceso-pestana.seleccionada { background: #fff; color: var(--azul); box-shadow: 0 2px 7px #14274717; }
+.acceso-tarjeta .campo { margin-bottom: 19px; }
+.acceso-tarjeta .campo input { width: 100%; border: 1px solid #dce3ef; padding: 12px 13px; border-radius: 10px; background: #fff; outline-color: #a9baff; }
+.mensaje-acceso { color: #ba3445; font-size: 12px; min-height: 17px; margin: 13px 0 0; line-height: 1.5; }
+.nota-demo { font-size: 11px; line-height: 1.5; color: #68758b; background: #f2f5fa; padding: 12px; border-radius: 10px; margin: 20px 0 0; }
+.menu-usuario { display: flex; align-items: center; gap: 11px; }
+.usuario-saludo { font-size: 13px; color: #41516b; font-weight: bold; white-space: nowrap; }
+.boton-salir { padding: 8px 11px; color: #a43444; background: #fff0f2; border: 0; border-radius: 9px; font-weight: bold; font-size: 12px; }
+.boton-salir:hover { background: #ffe1e4; }
+.boton:disabled { opacity: .6; cursor: wait; }
+@media (max-width: 780px) { .pantalla-acceso { grid-template-columns: 1fr; } .acceso-presentacion { gap: 22px; padding: 24px 25px; } .acceso-presentacion h1 { font-size: 29px; margin: 10px 0; } .acceso-presentacion .acceso-beneficios, .acceso-presentacion small { display: none; } .acceso-presentacion p { font-size: 13px; margin: 0; } .acceso-contenedor { padding: 23px 15px; } .acceso-tarjeta { padding: 24px; } }
+@media (max-width: 600px) { .menu-usuario { margin-left: auto; } .usuario-saludo { max-width: 130px; overflow: hidden; text-overflow: ellipsis; } .menu-principal { order: 3; } }

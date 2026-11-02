@@ -12,13 +12,9 @@ const mensajeFormulario = document.getElementById('mensajeFormulario');
 
 let tareas = [];
 let tareaEnEdicion = null;
+let usuarioActivo = null;
 
-// Mostrar la fecha en el encabezado.
-document.getElementById('fechaActual').textContent = new Date().toLocaleDateString('es-CO', {
-  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-});
-
-// Estas tareas son solo ejemplos para que se entienda la aplicación al abrirla.
+// Cada cuenta guarda sus tareas bajo una clave distinta.
 function fechaEjemplo(dias) {
   const fecha = new Date();
   fecha.setDate(fecha.getDate() + dias);
@@ -28,27 +24,22 @@ function fechaEjemplo(dias) {
   return `${anio}-${mes}-${dia}`;
 }
 
+function claveTareas() {
+  return 'notix_tareas_' + usuarioActivo.id;
+}
+
 function cargarTareas() {
   try {
-    const guardadas = localStorage.getItem('misTareas');
-    if (guardadas !== null) {
-      tareas = JSON.parse(guardadas);
-      if (!Array.isArray(tareas)) tareas = [];
-    } else {
-      tareas = [
-        { id: 1, titulo: 'Terminar taller de JavaScript', materia: 'Programación web', fecha: fechaEjemplo(1), prioridad: 'Alta', detalle: 'Revisar la parte de eventos del DOM.', completada: false },
-        { id: 2, titulo: 'Repasar HTML y CSS', materia: 'Diseño web', fecha: fechaEjemplo(3), prioridad: 'Media', detalle: '', completada: false },
-        { id: 3, titulo: 'Ver la lección de Git', materia: 'Herramientas', fecha: fechaEjemplo(-1), prioridad: 'Baja', detalle: '', completada: true }
-      ];
-      guardarTareas();
-    }
+    const datos = localStorage.getItem(claveTareas());
+    tareas = datos ? JSON.parse(datos) : [];
+    if (!Array.isArray(tareas)) tareas = [];
   } catch (error) {
     tareas = [];
   }
 }
 
 function guardarTareas() {
-  localStorage.setItem('misTareas', JSON.stringify(tareas));
+  if (usuarioActivo) localStorage.setItem(claveTareas(), JSON.stringify(tareas));
 }
 
 function mostrarResumen() {
@@ -205,6 +196,7 @@ function limpiarFormulario() {
 
 formulario.addEventListener('submit', function(evento) {
   evento.preventDefault();
+  if (!usuarioActivo) return;
 
   const titulo = document.getElementById('tituloTarea').value.trim();
   const materia = document.getElementById('materiaTarea').value.trim();
@@ -238,7 +230,7 @@ botonCancelar.addEventListener('click', function() {
 
 function gestionarAccionTarea(evento) {
   const boton = evento.target.closest('button[data-accion]');
-  if (!boton) return;
+  if (!boton || !usuarioActivo) return;
 
   const id = Number(boton.dataset.id);
   const tarea = tareas.find(tarea => tarea.id === id);
@@ -288,7 +280,7 @@ buscadorCompletadas.addEventListener('input', mostrarTareas);
 window.addEventListener('hashchange', cambiarVista);
 
 document.getElementById('botonLimpiar').addEventListener('click', function() {
-  if (!tareas.some(tarea => tarea.completada)) return;
+  if (!usuarioActivo || !tareas.some(tarea => tarea.completada)) return;
   if (confirm('¿Quieres eliminar todas las actividades terminadas?')) {
     tareas = tareas.filter(tarea => !tarea.completada);
     limpiarFormulario();
@@ -297,6 +289,217 @@ document.getElementById('botonLimpiar').addEventListener('click', function() {
   }
 });
 
-cargarTareas();
-mostrarTareas();
-cambiarVista();
+// La agenda se carga solamente después de entrar con una cuenta válida.
+
+
+// ---------------------------------------------------------------
+// Cuentas de demostración: correo + contraseña, guardadas localmente.
+// No sustituyen un sistema real de autenticación con servidor.
+// ---------------------------------------------------------------
+const CLAVE_USUARIOS = 'notix_usuarios_demo_v1';
+const CLAVE_SESION = 'notix_sesion_demo_v1';
+
+function obtenerUsuarios() {
+  try {
+    const datos = JSON.parse(localStorage.getItem(CLAVE_USUARIOS) || '[]');
+    return Array.isArray(datos) ? datos : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function correoValido(correo) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+}
+
+function cambiarFormularioAcceso(tipo) {
+  const registro = tipo === 'registro';
+  document.getElementById('formularioIngreso').classList.toggle('oculto', registro);
+  document.getElementById('formularioRegistro').classList.toggle('oculto', !registro);
+  document.getElementById('verIngreso').classList.toggle('seleccionada', !registro);
+  document.getElementById('verRegistro').classList.toggle('seleccionada', registro);
+  document.getElementById('verIngreso').setAttribute('aria-pressed', String(!registro));
+  document.getElementById('verRegistro').setAttribute('aria-pressed', String(registro));
+  document.getElementById('tituloAcceso').textContent = registro ? 'Crea tu cuenta' : 'Inicia sesión';
+  document.querySelector('.acceso-ayuda').textContent = registro
+    ? 'Registra tus datos para comenzar tu agenda.'
+    : 'Ingresa a tu agenda personal.';
+  document.getElementById('mensajeIngreso').textContent = '';
+  document.getElementById('mensajeRegistro').textContent = '';
+}
+
+// El navegador calcula una huella de la contraseña con PBKDF2.
+// No se guarda el texto de la contraseña; sigue siendo solo una demo local.
+function generarSal() {
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map(numero => numero.toString(16).padStart(2, '0')).join('');
+}
+
+async function huellaClave(contrasena, sal) {
+  const codificador = new TextEncoder();
+  const clave = await crypto.subtle.importKey(
+    'raw', codificador.encode(contrasena), 'PBKDF2', false, ['deriveBits']
+  );
+  const bits = await crypto.subtle.deriveBits({
+    name: 'PBKDF2',
+    salt: codificador.encode(sal),
+    iterations: 150000,
+    hash: 'SHA-256'
+  }, clave, 256);
+  return Array.from(new Uint8Array(bits))
+    .map(numero => numero.toString(16).padStart(2, '0')).join('');
+}
+
+function mensajeAcceso(tipo, texto) {
+  document.getElementById(tipo === 'registro' ? 'mensajeRegistro' : 'mensajeIngreso').textContent = texto;
+}
+
+function activarUsuario(usuario) {
+  usuarioActivo = usuario;
+  sessionStorage.setItem(CLAVE_SESION, usuario.id);
+  document.getElementById('pantallaAcceso').classList.add('oculto');
+  document.getElementById('aplicacion').classList.remove('oculto');
+  document.getElementById('usuarioSaludo').textContent = 'Hola, ' + usuario.nombre;
+  document.getElementById('formularioIngreso').reset();
+  document.getElementById('formularioRegistro').reset();
+  limpiarFormulario();
+  mensajeFormulario.textContent = '';
+  buscador.value = '';
+  buscadorCompletadas.value = '';
+  cargarTareas();
+  // Una sola vez, opcionalmente, trasladar tareas del NOTIX anterior.
+  ofrecerImportarTareas();
+  mostrarTareas();
+  cambiarVista();
+}
+
+function ofrecerImportarTareas() {
+  if (localStorage.getItem('notix_anteriores_asignadas_v1')) return;
+  const antiguas = localStorage.getItem('misTareas');
+  if (!antiguas) return;
+  try {
+    const lista = JSON.parse(antiguas);
+    if (!Array.isArray(lista) || !lista.length) return;
+    if (confirm('Hay tareas del NOTIX anterior en este navegador. ¿Deseas asignarlas a la cuenta de ' + usuarioActivo.nombre + '?')) {
+      tareas = tareas.concat(lista.map(item => ({ ...item, id: Date.now() + Math.floor(Math.random() * 1000000) })));
+      guardarTareas();
+      localStorage.setItem('notix_anteriores_asignadas_v1', usuarioActivo.id);
+    }
+  } catch (error) {
+    // Si esos datos no son válidos, no se importan.
+  }
+}
+
+function cerrarSesion() {
+  sessionStorage.removeItem(CLAVE_SESION);
+  usuarioActivo = null;
+  tareas = [];
+  limpiarFormulario();
+  mensajeFormulario.textContent = '';
+  listaTareas.replaceChildren();
+  listaCompletadas.replaceChildren();
+  document.getElementById('aplicacion').classList.add('oculto');
+  document.getElementById('pantallaAcceso').classList.remove('oculto');
+  cambiarFormularioAcceso('ingreso');
+  window.location.hash = '#pendientes';
+  document.getElementById('correoIngreso').focus();
+}
+
+document.getElementById('verIngreso').addEventListener('click', () => cambiarFormularioAcceso('ingreso'));
+document.getElementById('verRegistro').addEventListener('click', () => cambiarFormularioAcceso('registro'));
+document.getElementById('botonSalir').addEventListener('click', cerrarSesion);
+
+document.getElementById('formularioRegistro').addEventListener('submit', async function(evento) {
+  evento.preventDefault();
+  const nombre = document.getElementById('nombreRegistro').value.trim();
+  const correo = document.getElementById('correoRegistro').value.trim().toLowerCase();
+  const contrasena = document.getElementById('claveRegistro').value;
+  const confirmacion = document.getElementById('confirmarRegistro').value;
+  const boton = document.getElementById('botonRegistrar');
+
+  if (!nombre || !correo || !contrasena || !confirmacion) {
+    mensajeAcceso('registro', 'Completa todos los campos para registrarte.');
+    return;
+  }
+  if (!correoValido(correo)) {
+    mensajeAcceso('registro', 'Escribe un correo válido que incluya @ y un dominio.');
+    return;
+  }
+  if (contrasena.length < 8) {
+    mensajeAcceso('registro', 'La contraseña debe tener mínimo 8 caracteres.');
+    return;
+  }
+  if (contrasena !== confirmacion) {
+    mensajeAcceso('registro', 'Las contraseñas no coinciden.');
+    return;
+  }
+  if (obtenerUsuarios().some(usuario => usuario.correo === correo)) {
+    mensajeAcceso('registro', 'Este correo ya está registrado en este navegador.');
+    return;
+  }
+  if (!crypto.subtle || !crypto.randomUUID) {
+    mensajeAcceso('registro', 'Abre NOTIX con Live Server o GitHub Pages para crear cuentas.');
+    return;
+  }
+
+  boton.disabled = true;
+  mensajeAcceso('registro', 'Creando tu cuenta...');
+  try {
+    const sal = generarSal();
+    const hash = await huellaClave(contrasena, sal);
+    const usuario = { id: crypto.randomUUID(), nombre, correo, sal, hash };
+    // Si otro formulario se envió entre tanto, volver a verificar duplicados.
+    const usuarios = obtenerUsuarios();
+    if (usuarios.some(item => item.correo === correo)) {
+      mensajeAcceso('registro', 'Este correo ya está registrado.');
+      return;
+    }
+    usuarios.push(usuario);
+    localStorage.setItem(CLAVE_USUARIOS, JSON.stringify(usuarios));
+    activarUsuario(usuario);
+  } catch (error) {
+    mensajeAcceso('registro', 'No se pudo crear la cuenta. Prueba con Live Server o GitHub Pages.');
+  } finally {
+    boton.disabled = false;
+  }
+});
+
+document.getElementById('formularioIngreso').addEventListener('submit', async function(evento) {
+  evento.preventDefault();
+  const correo = document.getElementById('correoIngreso').value.trim().toLowerCase();
+  const contrasena = document.getElementById('claveIngreso').value;
+  const boton = document.getElementById('botonIngresar');
+
+  if (!correo || !contrasena) {
+    mensajeAcceso('ingreso', 'Completa el correo y la contraseña.');
+    return;
+  }
+  if (!correoValido(correo)) {
+    mensajeAcceso('ingreso', 'Ingresa un correo válido que incluya @ y un dominio.');
+    return;
+  }
+  const usuario = obtenerUsuarios().find(item => item.correo === correo);
+  if (!usuario) {
+    mensajeAcceso('ingreso', 'Correo o contraseña incorrectos.');
+    return;
+  }
+  boton.disabled = true;
+  mensajeAcceso('ingreso', 'Verificando datos...');
+  try {
+    const hash = await huellaClave(contrasena, usuario.sal);
+    if (hash !== usuario.hash) {
+      mensajeAcceso('ingreso', 'Correo o contraseña incorrectos.');
+      return;
+    }
+    activarUsuario(usuario);
+  } catch (error) {
+    mensajeAcceso('ingreso', 'No se pudieron verificar los datos.');
+  } finally {
+    boton.disabled = false;
+  }
+});
+
+// Si recargan la pestaña, conservamos la sesión hasta que la cierren.
+const idSesion = sessionStorage.getItem(CLAVE_SESION);
+const usuarioGuardado = obtenerUsuarios().find(item => item.id === idSesion);
+if (usuarioGuardado) activarUsuario(usuarioGuardado);

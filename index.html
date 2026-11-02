@@ -9,6 +9,76 @@
   <script src="script.js" defer></script>
 </head>
 <body>
+  <!-- Acceso de demostración: cada cuenta tiene su agenda local -->
+  <section class="pantalla-acceso" id="pantallaAcceso" aria-labelledby="tituloAcceso">
+    <div class="acceso-presentacion">
+      <a class="marca marca-acceso" href="#" aria-label="NOTIX, inicio">
+        <span class="marca-icono" aria-hidden="true">✓</span>
+        <span>NOTIX<span class="marca-punto">.</span></span>
+      </a>
+      <div>
+        <span class="etiqueta-superior etiqueta-clara">TU ESPACIO DE ESTUDIO</span>
+        <h1>Organiza tus tareas.<br><span>A tu manera.</span></h1>
+        <p>Tu agenda, tus pendientes y tus logros, en un solo lugar.</p>
+        <div class="acceso-beneficios">
+          <span>✓ Tareas por materia</span>
+          <span>✓ Pendientes y completadas</span>
+          <span>✓ Una agenda por perfil</span>
+        </div>
+      </div>
+      <small>NOTIX · Proyecto académico de JavaScript</small>
+    </div>
+
+    <div class="acceso-contenedor">
+      <div class="acceso-tarjeta">
+        <p class="acceso-etiqueta">BIENVENIDO A NOTIX</p>
+        <h2 id="tituloAcceso">Inicia sesión</h2>
+        <p class="acceso-ayuda">Ingresa a tu agenda personal.</p>
+        <div class="acceso-pestanas" role="group" aria-label="Opciones de acceso">
+          <button class="acceso-pestana seleccionada" type="button" id="verIngreso" aria-pressed="true">Iniciar sesión</button>
+          <button class="acceso-pestana" type="button" id="verRegistro" aria-pressed="false">Crear cuenta</button>
+        </div>
+
+        <form id="formularioIngreso" novalidate>
+          <div class="campo">
+            <label for="correoIngreso">Correo electrónico <span>*</span></label>
+            <input id="correoIngreso" type="email" autocomplete="username" placeholder="tunombre@correo.com" required>
+          </div>
+          <div class="campo">
+            <label for="claveIngreso">Contraseña <span>*</span></label>
+            <input id="claveIngreso" type="password" autocomplete="current-password" placeholder="Ingresa tu contraseña" required>
+          </div>
+          <button class="boton boton-principal" type="submit" id="botonIngresar">Entrar a mi agenda</button>
+          <p class="mensaje-acceso" id="mensajeIngreso" role="alert" aria-live="polite"></p>
+        </form>
+
+        <form id="formularioRegistro" class="oculto" novalidate>
+          <div class="campo">
+            <label for="nombreRegistro">Nombre de usuario <span>*</span></label>
+            <input id="nombreRegistro" type="text" maxlength="40" autocomplete="nickname" placeholder="Ej. Anyelo" required>
+          </div>
+          <div class="campo">
+            <label for="correoRegistro">Correo electrónico <span>*</span></label>
+            <input id="correoRegistro" type="email" autocomplete="email" placeholder="tunombre@correo.com" required>
+          </div>
+          <div class="campo">
+            <label for="claveRegistro">Contraseña <span>*</span></label>
+            <input id="claveRegistro" type="password" autocomplete="new-password" minlength="8" placeholder="Mínimo 8 caracteres" required>
+          </div>
+          <div class="campo">
+            <label for="confirmarRegistro">Confirmar contraseña <span>*</span></label>
+            <input id="confirmarRegistro" type="password" autocomplete="new-password" placeholder="Repite tu contraseña" required>
+          </div>
+          <button class="boton boton-principal" type="submit" id="botonRegistrar">Crear mi cuenta</button>
+          <p class="mensaje-acceso" id="mensajeRegistro" role="alert" aria-live="polite"></p>
+        </form>
+
+        <p class="nota-demo"><strong>Demo académica:</strong> usa una contraseña inventada. Las cuentas y tareas se guardan solo en este navegador. No hay sincronización ni seguridad de cuentas reales.</p>
+      </div>
+    </div>
+  </section>
+
+  <div id="aplicacion" class="oculto">
   <header class="encabezado">
     <div class="contenedor barra">
       <a class="marca" href="#pendientes" aria-label="NOTIX, ir a pendientes">
@@ -23,7 +93,10 @@
           Completadas <span class="numero-menu" id="menuCompletadas">0</span>
         </a>
       </nav>
-      <span class="texto-fecha" id="fechaActual"></span>
+      <div class="menu-usuario">
+        <span class="usuario-saludo" id="usuarioSaludo"></span>
+        <button type="button" class="boton-salir" id="botonSalir">Salir</button>
+      </div>
     </div>
   </header>
 
@@ -80,7 +153,7 @@
         <form id="formularioTarea">
           <div class="campo">
             <label for="tituloTarea">Nombre de la tarea <span>*</span></label>
-            <input type="text" id="tituloTarea" maxlength="80" placeholder="Ej. Terminar trabajo Calculo" required>
+            <input type="text" id="tituloTarea" maxlength="80" placeholder="Ej. Terminar taller de JavaScript" required>
           </div>
           <div class="campo">
             <label for="materiaTarea">Materia o curso <span>*</span></label>
@@ -163,9 +236,10 @@
 
   <footer class="pie-pagina">
     <div class="contenedor">
-      <span>NOTIX</span>
-      <span>Derechos Reservados estudiantes UdeCataluña</span>
+      <span>NOTIX · Proyecto final de JavaScript</span>
+      <span>HTML + CSS + JavaScript</span>
     </div>
   </footer>
+  </div>
 </body>
 </html>
