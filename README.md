@@ -19,8 +19,10 @@ Proyecto final grupal de JavaScript. Aplicación académica con dos secciones in
 
 - Integrante 1: Anyelo Andrey Palomo Gonzalez
 - Integrante 2: Yenny Paola Peña
-- Integrante 3: Monica Peña
+- Integrante 3: Mónica Isabel Peña Rodríguez
 
-## URL publicada
+## URL publicada y link de despliegue
 
 (https://github.com/Anyelo100209/NOTIX)
+
+Despliegue: https://anyelo100209.github.io/NOTIX/
