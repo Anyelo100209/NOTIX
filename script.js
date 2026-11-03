@@ -176,6 +176,115 @@ function crearTarjeta(tarea) {
   return tarjeta;
 }
 
+/* TABLERO KANBAN */
+
+// El estado se deriva de la tarea: 'completada' manda sobre el resto.
+function estadoTarea(tarea) {
+  if (tarea.completada) return 'completada';
+  return tarea.estado === 'proceso' ? 'proceso' : 'pendiente';
+}
+
+function cambiarEstadoTarea(id, estado) {
+  const tarea = tareas.find(item => item.id === id);
+  if (!tarea) return;
+
+  if (estado === 'completada') {
+    tarea.completada = true;
+    tarea.fechaCompletada = fechaEjemplo(0);
+    delete tarea.estado;
+  } else {
+    tarea.completada = false;
+    delete tarea.fechaCompletada;
+    tarea.estado = estado;
+  }
+
+  guardarTareas();
+  mostrarTareas();
+}
+
+// Tarjeta compacta con el selector de estado.
+function crearTarjetaKanban(tarea) {
+  const tarjeta = document.createElement('article');
+  tarjeta.className = 'kanban-tarjeta';
+
+  const titulo = document.createElement('strong');
+  titulo.textContent = tarea.titulo;
+
+  const detalle = document.createElement('p');
+  detalle.textContent = tarea.materia +
+    (tarea.fecha ? ' · ' + formatoFecha(tarea.fecha) : '');
+
+  const selector = document.createElement('select');
+  selector.setAttribute('aria-label', 'Estado de ' + tarea.titulo);
+
+  const opciones = [
+    { valor: 'pendiente', texto: 'Por hacer' },
+    { valor: 'proceso', texto: 'En proceso' },
+    { valor: 'completada', texto: 'Completada' }
+  ];
+
+  opciones.forEach(opcion => {
+    const elemento = document.createElement('option');
+    elemento.value = opcion.valor;
+    elemento.textContent = opcion.texto;
+    selector.appendChild(elemento);
+  });
+
+  selector.value = estadoTarea(tarea);
+
+  selector.addEventListener('change', function() {
+    cambiarEstadoTarea(tarea.id, selector.value);
+  });
+
+  tarjeta.append(titulo, detalle, selector);
+  return tarjeta;
+}
+
+function mostrarKanban() {
+  const columnas = {
+    pendiente: document.getElementById('kanbanPendiente'),
+    proceso: document.getElementById('kanbanProceso'),
+    completada: document.getElementById('kanbanCompletada')
+  };
+
+  const contadores = {
+    pendiente: document.getElementById('contadorKanbanPendiente'),
+    proceso: document.getElementById('contadorKanbanProceso'),
+    completada: document.getElementById('contadorKanbanCompletada')
+  };
+
+  const grupos = { pendiente: [], proceso: [], completada: [] };
+  tareas.forEach(tarea => grupos[estadoTarea(tarea)].push(tarea));
+
+  // Lo que falta por hacer se ordena por entrega; lo hecho, por lo más reciente.
+  grupos.pendiente.sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
+  grupos.proceso.sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
+  grupos.completada.sort((a, b) =>
+    (b.fechaCompletada || b.fecha || '').localeCompare(a.fechaCompletada || a.fecha || '')
+  );
+
+  Object.keys(grupos).forEach(clave => {
+    const columna = columnas[clave];
+    const contador = contadores[clave];
+    const lista = grupos[clave];
+
+    if (contador) contador.textContent = lista.length;
+    if (!columna) return;
+
+    columna.replaceChildren();
+
+    if (lista.length === 0) {
+      const vacio = document.createElement('p');
+      vacio.className = 'kanban-vacio';
+      vacio.textContent = 'Sin tareas';
+      columna.appendChild(vacio);
+      return;
+    }
+
+    lista.forEach(tarea => columna.appendChild(crearTarjetaKanban(tarea)));
+  });
+}
+
 // Cada sección muestra solo sus propias tareas.
 function mostrarTareas() {
   listaTareas.replaceChildren();
@@ -195,6 +304,7 @@ function mostrarTareas() {
   pintarLista(listaTareas, pendientes, 'pendientes', textoPendientes);
   pintarLista(listaCompletadas, terminadas, 'completadas', textoCompletadas);
   mostrarResumen();
+  mostrarKanban();
   actualizarRecordatorios();
 
   const botonLimpiar = document.getElementById('botonLimpiar');

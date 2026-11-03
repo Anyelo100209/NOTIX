@@ -42,6 +42,13 @@ No requiere instalación de paquetes ni proceso de compilación.
 - La navegación usa `#pendientes` y `#completadas` mediante los enlaces de cada vista,
   sin recargar la página. Las pestañas del encabezado están ocultas por diseño.
 
+### Tablero Kanban
+
+- Tres columnas: *Por hacer*, *En proceso* y *Completadas*, con su contador.
+- Cada tarjeta tiene un selector para mover la tarea entre los tres estados.
+- El tablero se actualiza junto con las listas, así que completar una tarea
+  desde cualquier parte se refleja en la columna correspondiente.
+
 ### Avance y recordatorios
 
 - Tarjeta de avance con el porcentaje de tareas completadas y barra de progreso.
@@ -109,11 +116,6 @@ en el navegador de cada equipo, por lo que:
 - Los datos pueden verse o modificarse desde las herramientas del navegador.
 
 No debe usarse con contraseñas reales ni con información sensible.
-
-## En desarrollo
-
-- **Tablero Kanban**: la interfaz con las columnas *Por hacer*, *En proceso* y
-  *Completadas* ya está maquetada, pero todavía no se alimenta con las tareas.
 
 ## Integrantes
 

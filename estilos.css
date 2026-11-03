@@ -735,3 +735,48 @@ nav.navegacion-tareas {
     gap: 4px;
   }
 }
+
+/* =================================
+   BOTÓN DE VOLVER Y COLUMNA VACÍA
+   ================================= */
+
+/* Volver a pendientes desde el historial, arriba a la izquierda */
+.boton-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 10px 16px;
+  border: 1px solid var(--borde);
+  border-radius: 11px;
+  background: #ffffff;
+  color: var(--azul);
+  font-size: 13px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: background .15s, border-color .15s;
+}
+
+.boton-volver:hover {
+  background: var(--azul-claro);
+  border-color: var(--azul);
+}
+
+/* Mensaje de columna sin tareas en el tablero */
+.kanban-vacio {
+  margin: 0;
+  font-size: 12px;
+  color: var(--gris);
+}
+
+/* Modo oscuro */
+:root[data-tema="oscuro"] .boton-volver {
+  background: #202c40;
+  border-color: #44536b;
+  color: #9fb8ff;
+}
+
+:root[data-tema="oscuro"] .boton-volver:hover {
+  background: #25334b;
+  border-color: #9fb8ff;
+}
