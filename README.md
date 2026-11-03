@@ -19,7 +19,8 @@ No requiere instalación de paquetes ni proceso de compilación.
 
 ### Cuentas de usuario
 
-- Crear cuenta con nombre, correo y contraseña de al menos 8 caracteres.
+- Crear cuenta con nombre, correo, contraseña de al menos 8 caracteres y
+  meta semanal de tareas.
 - Iniciar sesión y cerrar sesión.
 - Las contraseñas no se guardan en texto plano: se almacena una huella generada con
   PBKDF2, SHA-256, sal aleatoria y 150.000 iteraciones.
@@ -62,14 +63,16 @@ No requiere instalación de paquetes ni proceso de compilación.
 
 ### Meta semanal
 
-- La meta se define en el perfil, entre 1 y 100 tareas por semana.
+- Cada usuario define su meta **al crear la cuenta**, entre 1 y 100 tareas.
+- Se puede cambiar en cualquier momento desde el perfil.
 - La semana va de **lunes a domingo** y se calcula con la fecha en que se
   completó cada tarea.
 - El perfil muestra el avance, el porcentaje, una barra de progreso y el rango
   de fechas de la semana en curso.
 - El panel de recordatorios indica cuántas tareas faltan para la meta, o avisa
   cuando ya está cumplida.
-- Las cuentas sin meta definida usan 5 tareas por semana.
+- Las cuentas creadas antes de que la meta se pidiera en el registro usan 5
+  como valor de respaldo, hasta que su dueño la ajuste en el perfil.
 
 ### Interfaz
 

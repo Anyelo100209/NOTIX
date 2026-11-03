@@ -69,6 +69,11 @@
             <label for="confirmarRegistro">Confirmar contraseña <span>*</span></label>
             <input id="confirmarRegistro" type="password" autocomplete="new-password" placeholder="Repite tu contraseña" required>
           </div>
+          <div class="campo">
+            <label for="metaRegistro">Meta semanal de tareas <span>*</span></label>
+            <input id="metaRegistro" type="number" min="1" max="100" step="1" placeholder="Ej. 4" required>
+            <small class="ayuda-campo">¿Cuántas tareas quieres completar cada semana? Podrás cambiarla luego en tu perfil.</small>
+          </div>
           <button class="boton boton-principal" type="submit" id="botonRegistrar">Crear mi cuenta</button>
           <p class="mensaje-acceso" id="mensajeRegistro" role="alert" aria-live="polite"></p>
         </form>

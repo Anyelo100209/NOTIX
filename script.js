@@ -45,11 +45,19 @@ function rangoSemana() {
   return { inicio: textoFecha(lunes), fin: textoFecha(domingo) };
 }
 
-// Si la cuenta no tiene meta válida, se usan 5 tareas por semana.
+// Límites de la meta semanal. META_RESPALDO solo cubre las cuentas
+// creadas antes de que la meta se pidiera en el registro.
+const META_MINIMA = 1;
+const META_MAXIMA = 100;
+const META_RESPALDO = 5;
+
+function metaValida(valor) {
+  return Number.isInteger(valor) && valor >= META_MINIMA && valor <= META_MAXIMA;
+}
+
 function metaSemanal() {
   const valor = Number(usuarioActivo && usuarioActivo.metaSemanal);
-  const valida = Number.isInteger(valor) && valor >= 1 && valor <= 100;
-  return valida ? valor : 5;
+  return metaValida(valor) ? valor : META_RESPALDO;
 }
 
 // Cuenta las tareas terminadas dentro de la semana en curso.
@@ -581,10 +589,17 @@ document.getElementById('formularioRegistro').addEventListener('submit', async f
   const correo = document.getElementById('correoRegistro').value.trim().toLowerCase();
   const contrasena = document.getElementById('claveRegistro').value;
   const confirmacion = document.getElementById('confirmarRegistro').value;
+  const metaTexto = document.getElementById('metaRegistro').value.trim();
+  const meta = Number(metaTexto);
   const boton = document.getElementById('botonRegistrar');
 
-  if (!nombre || !correo || !contrasena || !confirmacion) {
+  if (!nombre || !correo || !contrasena || !confirmacion || !metaTexto) {
     mensajeAcceso('registro', 'Completa todos los campos para registrarte.');
+    return;
+  }
+  if (!metaValida(meta)) {
+    mensajeAcceso('registro', 'La meta semanal debe ser un número entero entre ' +
+      META_MINIMA + ' y ' + META_MAXIMA + '.');
     return;
   }
   if (!correoValido(correo)) {
@@ -613,7 +628,14 @@ document.getElementById('formularioRegistro').addEventListener('submit', async f
   try {
     const sal = generarSal();
     const hash = await huellaClave(contrasena, sal);
-    const usuario = { id: crypto.randomUUID(), nombre, correo, sal, hash };
+    const usuario = {
+      id: crypto.randomUUID(),
+      nombre,
+      correo,
+      sal,
+      hash,
+      metaSemanal: meta
+    };
     // Si otro formulario se envió entre tanto, volver a verificar duplicados.
     const usuarios = obtenerUsuarios();
     if (usuarios.some(item => item.correo === correo)) {
@@ -889,10 +911,10 @@ formularioPerfil.addEventListener("submit", function(evento) {
   const meta =
     Number(document.getElementById("metaPerfil").value);
 
-  if (!nombre || !Number.isInteger(meta) ||
-      meta < 1 || meta > 100) {
+  if (!nombre || !metaValida(meta)) {
     document.getElementById("mensajePerfil").textContent =
-      "Revisa el nombre y la meta semanal.";
+      "Escribe tu nombre y una meta entre " +
+      META_MINIMA + " y " + META_MAXIMA + " tareas.";
     return;
   }
 
