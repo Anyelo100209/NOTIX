@@ -95,6 +95,9 @@
       </nav>
       <div class="menu-usuario">
         <span class="usuario-saludo" id="usuarioSaludo"></span>
+        <button type="button" id="abrirPerfil" class="boton-perfil">
+  👤 Mi perfil
+</button>
         <button type="button" class="boton-salir" id="botonSalir">Salir</button>
       </div>
     </div>
@@ -110,34 +113,62 @@
       </div>
       <div class="nota-bienvenida">
         <span class="nota-icono" aria-hidden="true">✦</span>
-        <p>Un poquito de orden<br><strong>hace la diferencia.</strong></p>
+        <p>Un poco de orden<br><strong>hace la diferencia.</strong></p>
       </div>
-    </section>
+  </section>
 
-    <section class="resumen" aria-label="Resumen de tareas">
-      <article class="resumen-tarjeta">
-        <span class="resumen-nombre">Total de tareas</span>
-        <strong id="totalTareas">0</strong>
-        <span class="resumen-pie">Todas las actividades</span>
-      </article>
-      <article class="resumen-tarjeta">
-        <span class="resumen-nombre">Por hacer</span>
-        <strong id="tareasPendientes">0</strong>
-        <span class="resumen-pie">Sin completar todavía</span>
-      </article>
-      <article class="resumen-tarjeta">
-        <span class="resumen-nombre">Terminadas</span>
-        <strong id="tareasTerminadas">0</strong>
-        <span class="resumen-pie">¡Buen trabajo!</span>
-      </article>
-      <article class="resumen-tarjeta resumen-avance">
-        <span class="resumen-nombre">Tu avance</span>
-        <strong id="porcentajeAvance">0%</strong>
-        <div class="barra-progreso" role="progressbar" aria-label="Porcentaje de tareas completadas" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="barraAvance">
-          <span id="progresoRelleno"></span>
-        </div>
-      </article>
-    </section>
+  <div class="zona-kanban-avance">
+
+    <!-- TABLERO KANBAN -->
+<section class="panel panel-kanban" aria-labelledby="tituloKanban">
+
+  <div class="panel-encabezado">
+    <div>
+      <h2 id="tituloKanban">▥ Mi tablero Kanban</h2>
+    </div>
+  </div>
+
+  <div class="kanban-columnas">
+
+    <div class="kanban-columna">
+      <h3>Por hacer</h3>
+      <strong class="kanban-contador" id="contadorKanbanPendiente">0</strong>
+      <div id="kanbanPendiente"></div>
+    </div>
+
+    <div class="kanban-columna">
+      <h3>En proceso</h3>
+      <strong class="kanban-contador" id="contadorKanbanProceso">0</strong>
+      <div id="kanbanProceso"></div>
+    </div>
+
+    <div class="kanban-columna">
+      <h3>Completadas</h3>
+      <strong class="kanban-contador" id="contadorKanbanCompletada">0</strong>
+      <div id="kanbanCompletada"></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- TARJETA DE AVANCE -->
+<article class="resumen-tarjeta resumen-avance">
+  <span class="resumen-nombre">Tu avance</span>
+
+  <strong id="porcentajeAvance">0%</strong>
+
+  <div class="barra-progreso"
+       role="progressbar"
+       aria-label="Porcentaje de tareas completadas"
+       aria-valuemin="0"
+       aria-valuemax="100"
+       aria-valuenow="0"
+       id="barraAvance">
+    <span id="progresoRelleno"></span>
+  </div>
+</article>
+
+</div> <!-- Fin de zona-kanban-avance -->
 
     <div class="columnas">
       <section class="panel panel-formulario" aria-labelledby="tituloFormulario">
@@ -241,5 +272,61 @@
     </div>
   </footer>
   </div>
+  <!-- Botón para cambiar entre modo claro y modo oscuro -->
+  <button type="button" class="boton-tema" id="botonTema" aria-label="Activar modo oscuro" aria-pressed="false" title="Cambiar tema">
+    <span id="iconoTema" aria-hidden="true">🌙</span>
+    <span id="textoTema">Modo oscuro</span>
+  </button>
+<!-- PERFIL DEL ESTUDIANTE -->
+<section id="modalPerfil" class="modal-perfil oculto"
+         role="dialog" aria-modal="true"
+         aria-labelledby="tituloPerfil">
+
+  <div class="perfil-contenido">
+
+    <button type="button" id="cerrarPerfil"
+            class="cerrar-perfil" aria-label="Cerrar perfil">
+      ✕
+    </button>
+
+    <div class="perfil-avatar">👤</div>
+
+    <h2 id="tituloPerfil">Mi perfil académico</h2>
+    <p>Personaliza tu información en NO TIX.</p>
+
+    <form id="formularioPerfil">
+
+      <label for="nombrePerfil">Nombre completo</label>
+      <input id="nombrePerfil" type="text"
+             maxlength="60" required>
+
+      <label for="correoPerfil">Correo electrónico</label>
+      <input id="correoPerfil" type="email"
+             readonly>
+
+      <label for="metaPerfil">Meta semanal de tareas</label>
+      <input id="metaPerfil" type="number"
+             min="1" max="100" value="5" required>
+
+      <div class="perfil-estadisticas">
+        <div>
+          <strong id="perfilCompletadas">0</strong>
+          <span>Completadas</span>
+        </div>
+        <div>
+          <strong id="perfilPendientes">0</strong>
+          <span>Pendientes</span>
+        </div>
+      </div>
+
+      <p id="mensajePerfil" role="status"></p>
+
+      <button type="submit" class="guardar-perfil">
+        Guardar cambios
+      </button>
+
+    </form>
+  </div>
+</section>
 </body>
 </html>
