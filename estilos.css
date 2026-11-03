@@ -524,9 +524,10 @@ nav.navegacion-tareas {
 
 .zona-kanban-avance {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(220px, 1fr);
+  grid-template-columns: minmax(0, 3fr) minmax(250px, 1fr);
   gap: 15px;
-  align-items: stretch;
+  /* 'start' evita que la tarjeta de avance se estire a la altura del tablero */
+  align-items: start;
   margin-bottom: 25px;
 }
 
@@ -541,13 +542,12 @@ nav.navegacion-tareas {
   display: none;
 }
 
-/* Conservar la tarjeta azul */
+/* Tarjeta de avance: alta solo lo que necesita su contenido */
 .zona-kanban-avance .resumen-avance {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
-  min-height: 180px;
+  display: block;
+  height: auto;
+  min-height: 0;
+  padding: 20px;
 }
 
 /* Tablero Kanban */
@@ -570,37 +570,98 @@ nav.navegacion-tareas {
   background: #f1f5ff;
 }
 
+/* Título y contador en la misma línea, como en los tableros habituales */
+.kanban-columna-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 .kanban-columna h3 {
-  margin: 0 0 12px;
-  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 13px;
   color: #263754;
+}
+
+/* Punto de color que identifica cada estado */
+.kanban-punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+[data-estado="pendiente"] .kanban-punto { background: #64748b; }
+[data-estado="proceso"] .kanban-punto { background: #d97706; }
+[data-estado="completada"] .kanban-punto { background: #15803d; }
+
+.kanban-contador {
+  min-width: 24px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #d4dce9;
+  color: #263754;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* La columna no crece sin límite: a partir de cierto alto, se desplaza */
+.kanban-lista {
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .kanban-tarjeta {
   background: #ffffff;
-  border-left: 4px solid #4169e1;
+  border-left: 4px solid #64748b;
   border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 10px;
+  padding: 11px;
+  margin-bottom: 9px;
   overflow-wrap: anywhere;
 }
 
+.kanban-tarjeta:last-child {
+  margin-bottom: 0;
+}
+
+.kanban-proceso { border-left-color: #d97706; }
+.kanban-completada { border-left-color: #15803d; }
+.kanban-vencida { border-left-color: #c62828; }
+
 .kanban-tarjeta strong {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
+  font-size: 13px;
+  line-height: 1.35;
 }
 
 .kanban-tarjeta p {
-  font-size: 12px;
+  margin: 0 0 9px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--gris);
+}
+
+.kanban-completada strong {
+  text-decoration: line-through;
+  opacity: .75;
 }
 
 .kanban-tarjeta select {
   width: 100%;
-  padding: 8px;
+  padding: 6px 8px;
   border-radius: 7px;
   border: 1px solid #d4dce9;
   background: #ffffff;
   color: #263754;
+  font-size: 12px;
 }
 
 /* Modo oscuro */
@@ -634,4 +695,388 @@ nav.navegacion-tareas {
   .kanban-columnas {
     grid-template-columns: 1fr;
   }
+}
+
+/* =================================
+   META SEMANAL
+   ================================= */
+
+/* Bloque de la meta dentro del perfil */
+.perfil-meta {
+  margin-top: 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  background: #f7f9fd;
+  text-align: left;
+}
+
+.perfil-meta-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #263754;
+}
+
+.perfil-meta-encabezado strong {
+  font-size: 18px;
+  color: var(--azul);
+}
+
+/* La barra del perfil va sobre fondo claro, no sobre la tarjeta azul */
+.barra-meta {
+  background: #dfe6f4;
+  margin-top: 12px;
+}
+
+.barra-meta span {
+  background: var(--azul);
+}
+
+#perfilMetaRango {
+  display: block;
+  margin-top: 9px;
+  font-size: 11px;
+  color: var(--gris);
+}
+
+/* Aviso de la meta en el panel de recordatorios */
+.aviso-meta {
+  margin-bottom: 12px;
+  padding: 11px 14px;
+  border-radius: 11px;
+  border: 1px dashed #b9c8e6;
+  background: var(--azul-claro);
+  color: #263754;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.aviso-meta-cumplida {
+  border-style: solid;
+  border-color: #9fd8b4;
+  background: #e8f8ee;
+  color: #1c6b3c;
+}
+
+/* Modo oscuro */
+:root[data-tema="oscuro"] .perfil-meta {
+  background: #172337;
+  border-color: #44536b;
+}
+
+:root[data-tema="oscuro"] .perfil-meta-encabezado {
+  color: #f1f5ff;
+}
+
+:root[data-tema="oscuro"] .barra-meta {
+  background: #2d3b54;
+}
+
+:root[data-tema="oscuro"] .aviso-meta {
+  background: #25334b;
+  border-color: #44536b;
+  color: #f1f5ff;
+}
+
+:root[data-tema="oscuro"] .aviso-meta-cumplida {
+  background: #1d3a2a;
+  border-color: #2f7a52;
+  color: #c8f3d8;
+}
+
+/* Adaptación a celulares */
+@media (max-width: 600px) {
+  .perfil-meta-encabezado {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+/* =================================
+   BOTÓN DE VOLVER Y COLUMNA VACÍA
+   ================================= */
+
+/* Volver a pendientes desde el historial, arriba a la izquierda */
+.boton-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 10px 16px;
+  border: 1px solid var(--borde);
+  border-radius: 11px;
+  background: #ffffff;
+  color: var(--azul);
+  font-size: 13px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: background .15s, border-color .15s;
+}
+
+.boton-volver:hover {
+  background: var(--azul-claro);
+  border-color: var(--azul);
+}
+
+/* Mensaje de columna sin tareas en el tablero */
+.kanban-vacio {
+  margin: 0;
+  font-size: 12px;
+  color: var(--gris);
+}
+
+/* Modo oscuro */
+:root[data-tema="oscuro"] .boton-volver {
+  background: #202c40;
+  border-color: #44536b;
+  color: #9fb8ff;
+}
+
+:root[data-tema="oscuro"] .boton-volver:hover {
+  background: #25334b;
+  border-color: #9fb8ff;
+}
+
+/* Texto de ayuda bajo un campo del formulario */
+.ayuda-campo {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--gris);
+}
+
+/* =================================
+   AVISOS POR UMBRAL Y CALENDARIO
+   ================================= */
+
+/* Encabezado del panel de recordatorios */
+.recordatorios-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.recordatorios-encabezado h2 {
+  margin: 0;
+}
+
+.boton-avisos {
+  padding: 9px 14px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--azul);
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+
+.boton-avisos:hover:not(:disabled) {
+  background: var(--azul-claro);
+  border-color: var(--azul);
+}
+
+.boton-avisos:disabled {
+  color: var(--gris);
+  cursor: default;
+}
+
+.recordatorios-nota {
+  margin: 10px 0 16px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--gris);
+}
+
+/* Colores por cercanía de la entrega */
+.aviso-critico { color: #c62828; }
+.aviso-urgente { color: #d97706; }
+.aviso-proximo { color: #a16207; }
+.aviso-lejano  { color: #1d4ed8; }
+
+/* Etiqueta de cuenta atrás en la tarjeta de la tarea */
+.cuenta-atras {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: #f1f4fa;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.cuenta-atras.aviso-critico { background: #fdeaea; }
+.cuenta-atras.aviso-urgente { background: #fdf0e0; }
+.cuenta-atras.aviso-proximo { background: #fbf5e0; }
+.cuenta-atras.aviso-lejano  { background: var(--azul-claro); }
+
+/* Botones de exportación al calendario */
+.accion-calendario {
+  font-size: 11px;
+}
+
+/* Modo oscuro */
+:root[data-tema="oscuro"] .boton-avisos {
+  background: #202c40;
+  border-color: #44536b;
+  color: #9fb8ff;
+}
+
+:root[data-tema="oscuro"] .boton-avisos:hover:not(:disabled) {
+  background: #25334b;
+  border-color: #9fb8ff;
+}
+
+:root[data-tema="oscuro"] .aviso-critico { color: #ff9b9b; }
+:root[data-tema="oscuro"] .aviso-urgente { color: #ffc07a; }
+:root[data-tema="oscuro"] .aviso-proximo { color: #f2dd93; }
+:root[data-tema="oscuro"] .aviso-lejano  { color: #9fb8ff; }
+
+:root[data-tema="oscuro"] .cuenta-atras { background: #25334b; }
+:root[data-tema="oscuro"] .cuenta-atras.aviso-critico { background: #3d2222; }
+:root[data-tema="oscuro"] .cuenta-atras.aviso-urgente { background: #3d3022; }
+:root[data-tema="oscuro"] .cuenta-atras.aviso-proximo { background: #3a3622; }
+:root[data-tema="oscuro"] .cuenta-atras.aviso-lejano  { background: #22304d; }
+
+/* Adaptación a celulares */
+@media (max-width: 600px) {
+  .recordatorios-encabezado {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .boton-avisos {
+    width: 100%;
+  }
+}
+
+/* =================================
+   TARJETA DE AVANCE REDISEÑADA
+   ================================= */
+
+.avance-cifra {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+/* El porcentaje ya no necesita el tamaño gigante del diseño anterior */
+.resumen-avance .avance-cifra strong {
+  margin: 8px 0 0;
+  font-size: 34px;
+  line-height: 1;
+}
+
+#avanceRazon {
+  font-size: 12px;
+  color: #d7e1ff;
+}
+
+/* Desglose por estado */
+.avance-detalle {
+  display: grid;
+  gap: 7px;
+  margin: 16px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, .28);
+  list-style: none;
+}
+
+.avance-detalle li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.avance-detalle span {
+  font-size: 12px;
+  color: #d7e1ff;
+}
+
+/* Sin esto heredarían los 32px de .resumen-tarjeta strong */
+.resumen-avance .avance-detalle strong {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.avance-meta {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, .28);
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* Barra de desplazamiento discreta en las columnas del tablero */
+.kanban-lista::-webkit-scrollbar {
+  width: 6px;
+}
+
+.kanban-lista::-webkit-scrollbar-thumb {
+  background: #c7d2e5;
+  border-radius: 10px;
+}
+
+/* Modo oscuro */
+:root[data-tema="oscuro"] .kanban-contador {
+  background: #25334b;
+  border-color: #44536b;
+  color: #f1f5ff;
+}
+
+:root[data-tema="oscuro"] .kanban-tarjeta p {
+  color: #aab8d0;
+}
+
+:root[data-tema="oscuro"] .kanban-lista::-webkit-scrollbar-thumb {
+  background: #44536b;
+}
+
+/* Adaptación a celulares */
+@media (max-width: 900px) {
+  /* En una sola columna el tablero ya no compite con la tarjeta de avance */
+  .kanban-lista {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 600px) {
+  .resumen-avance .avance-cifra strong {
+    font-size: 30px;
+  }
+
+  .kanban-lista {
+    max-height: 260px;
+  }
+}
+
+/* Aviso de permiso de notificaciones pendiente o bloqueado */
+.aviso-permiso {
+  margin: 0 0 12px;
+  padding: 10px 13px;
+  border: 1px dashed #e0c48a;
+  border-radius: 10px;
+  background: #fdf8ec;
+  color: #7a5a00;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+:root[data-tema="oscuro"] .aviso-permiso {
+  background: #33301f;
+  border-color: #6b5a2f;
+  color: #f3e4bd;
 }

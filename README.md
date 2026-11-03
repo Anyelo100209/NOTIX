@@ -1,28 +1,154 @@
 # NOTIX — Tu semestre, bajo control
 
-Proyecto final grupal de JavaScript. Aplicación académica con dos secciones independientes: **Pendientes** y **Completadas**.
+Proyecto final grupal de JavaScript. Aplicación web para organizar tareas académicas,
+con cuentas locales, tablero de avance y recordatorios de entrega.
+
+La aplicación es estática: funciona por completo en el navegador, sin servidor ni base de datos.
+
+## Tecnologías
+
+- HTML5
+- CSS3
+- JavaScript (sin frameworks ni dependencias)
+- `localStorage` y `sessionStorage` para guardar los datos
+- Web Crypto API para proteger las contraseñas
+
+No requiere instalación de paquetes ni proceso de compilación.
 
 ## Funciones
 
-- Registrar tareas con título, materia, fecha, prioridad y descripción opcional.
-- En **Pendientes** solo aparecen las actividades que faltan por hacer.
-- Al pulsar **Terminar**, la tarea pasa a **Completadas** y se registra la fecha en que se marcó como terminada.
-- En **Completadas** se puede buscar, reabrir, editar o eliminar una tarea, o vaciar el historial con confirmación.
-- Editar y eliminar tareas pendientes; buscar por título o materia.
-- Consultar el total, las tareas pendientes, las terminadas y el avance porcentual.
-- Guardar en `localStorage`. Se mantienen los datos al recargar en **el mismo navegador y origen**.
-- Navegar entre secciones con pestañas y enlaces `#pendientes` y `#completadas`, sin recargar la página.
-- Interfaz adaptable a celular y computador.
+### Cuentas de usuario
 
+- Crear cuenta con nombre, correo, contraseña de al menos 8 caracteres y
+  meta semanal de tareas.
+- Iniciar sesión y cerrar sesión.
+- Las contraseñas no se guardan en texto plano: se almacena una huella generada con
+  PBKDF2, SHA-256, sal aleatoria y 150.000 iteraciones.
+- Cada cuenta tiene sus propias tareas, separadas de las demás.
+
+### Gestión de tareas
+
+- Registrar tareas con título, materia, fecha de entrega, hora opcional,
+  prioridad y descripción opcional.
+- Editar y eliminar tareas, con confirmación antes de borrar.
+- Marcar una tarea como terminada; queda registrada la fecha en que se completó.
+- Reabrir una tarea completada si hay que corregir algo.
+- Buscar por título o materia en pendientes y en completadas.
+- Vaciar el historial de completadas.
+- Las tareas vencidas se señalan en la tarjeta.
+
+### Secciones
+
+- **Pendientes**: solo las actividades que faltan por hacer, ordenadas por fecha de entrega.
+- **Completadas**: historial de lo terminado, ordenado por fecha de finalización.
+- La navegación usa `#pendientes` y `#completadas` mediante los enlaces de cada vista,
+  sin recargar la página. Las pestañas del encabezado están ocultas por diseño.
+
+### Tablero Kanban
+
+- Tres columnas: *Por hacer*, *En proceso* y *Completadas*, con su contador.
+- Cada tarjeta tiene un selector para mover la tarea entre los tres estados.
+- El tablero se actualiza junto con las listas, así que completar una tarea
+  desde cualquier parte se refleja en la columna correspondiente.
+
+### Avance y recordatorios
+
+- Tarjeta de avance con el porcentaje de tareas completadas y barra de progreso.
+- La hora de entrega es opcional; si se omite se usan las 8:00 a.m.
+- Avisos a **24 horas, 6 horas, 1 hora y 15 minutos** antes de la entrega.
+- El panel marca cada tarea con el umbral que ya cruzó, y señala las vencidas.
+- Con el permiso concedido, el navegador muestra una notificación por umbral,
+  sin repetirla en los siguientes minutos.
+- Las fechas se revisan cada minuto y al modificar cualquier tarea.
+
+> **Límite importante:** los avisos del navegador solo llegan mientras NOTIX
+> esté abierto. Programar notificaciones con la aplicación cerrada exigiría un
+> servidor con Push API, y NOTIX es una aplicación estática sin backend.
+> Para recibir avisos con la app cerrada, exporta la tarea a tu calendario.
+
+### Exportar al calendario
+
+Cada tarea pendiente tiene dos botones:
+
+- **📅 Google**: abre Google Calendar con el evento prellenado, listo para guardar.
+  Google aplica los recordatorios configurados en el calendario del usuario,
+  porque su enlace no admite avisos personalizados.
+- **⬇ .ics**: descarga un archivo iCalendar con los cuatro avisos incluidos
+  como bloques `VALARM`. Outlook y Apple Calendar los respetan. Google Calendar
+  importa el evento, pero descarta esos avisos.
+
+### Perfil
+
+- Modal de perfil con el correo de la cuenta y el conteo de tareas pendientes y completadas.
+- Permite cambiar el nombre visible y definir una meta semanal de tareas.
+
+### Meta semanal
+
+- Cada usuario define su meta **al crear la cuenta**, entre 1 y 100 tareas.
+- Se puede cambiar en cualquier momento desde el perfil.
+- La semana va de **lunes a domingo** y se calcula con la fecha en que se
+  completó cada tarea.
+- El perfil muestra el avance, el porcentaje, una barra de progreso y el rango
+  de fechas de la semana en curso.
+- El panel de recordatorios indica cuántas tareas faltan para la meta, o avisa
+  cuando ya está cumplida.
+- Las cuentas creadas antes de que la meta se pidiera en el registro usan 5
+  como valor de respaldo, hasta que su dueño la ajuste en el perfil.
+
+### Interfaz
+
+- Tema claro y oscuro, con la preferencia guardada entre sesiones.
+- Diseño adaptable a celular y computador.
+
+## Cómo ejecutar el proyecto
+
+El proyecto debe servirse por HTTP, no abrirse con doble clic sobre el archivo.
+El registro de cuentas usa la Web Crypto API, que los navegadores solo habilitan
+en contextos seguros.
+
+1. Abre la carpeta del proyecto en VS Code.
+2. Instala la extensión **Live Server**.
+3. Haz clic derecho sobre `index.html` y elige **Open with Live Server**.
+4. Crea una cuenta y entra con ella.
+
+También puedes usar la versión publicada en GitHub Pages.
+
+## Estructura de archivos
+
+| Archivo | Contenido |
+|---|---|
+| `index.html` | Pantalla de acceso, agenda, formularios, listados, avance y perfil |
+| `estilos.css` | Diseño, componentes, tema oscuro y adaptación a móvil |
+| `script.js` | Cuentas, tareas, persistencia, renderizado, recordatorios y perfil |
+
+## Datos guardados en el navegador
+
+| Clave | Contenido |
+|---|---|
+| `notix_usuarios_demo_v1` | Cuentas registradas, con sal y huella de contraseña |
+| `notix_sesion_demo_v1` | Identificador de la sesión activa (`sessionStorage`) |
+| `notix_tareas_<id>` | Tareas de cada cuenta |
+| `notix_avisos_<id>` | Avisos ya mostrados, para no repetirlos |
+| `notix_tema_preferido` | Tema claro u oscuro |
+
+## Aviso sobre las cuentas
+
+El sistema de cuentas es una demostración académica. Toda la información se guarda
+en el navegador de cada equipo, por lo que:
+
+- No hay sincronización entre dispositivos ni entre navegadores.
+- No existe recuperación de contraseña.
+- Los datos pueden verse o modificarse desde las herramientas del navegador.
+
+No debe usarse con contraseñas reales ni con información sensible.
 
 ## Integrantes
 
-- Integrante 1: Anyelo Andrey Palomo Gonzalez
-- Integrante 2: Yenny Paola Peña
-- Integrante 3: Mónica Isabel Peña Rodríguez
+- Anyelo Andrey Palomo Gonzalez
+- Yenny Paola Peña
+- Mónica Isabel Peña Rodríguez
 
-## URL publicada y link de despliegue
+## Repositorio y despliegue
 
-(https://github.com/Anyelo100209/NOTIX)
-
-Despliegue: https://anyelo100209.github.io/NOTIX/
+- Repositorio: https://github.com/Anyelo100209/NOTIX
+- Despliegue: https://anyelo100209.github.io/NOTIX/
