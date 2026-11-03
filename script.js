@@ -175,8 +175,27 @@ function formatoHora(tarea) {
     .toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' });
 }
 
+// Se usa floor y no round: con round, los primeros 30 segundos de retraso
+// daban -0, que no es menor que 0, y la tarea no se marcaba como vencida.
 function minutosRestantes(tarea) {
-  return Math.round((fechaHoraTarea(tarea).getTime() - Date.now()) / 60000);
+  return Math.floor((fechaHoraTarea(tarea).getTime() - Date.now()) / 60000);
+}
+
+// Texto del retraso acumulado, para las tareas ya vencidas.
+function textoRetraso(tarea) {
+  const minutos = Math.abs(minutosRestantes(tarea));
+
+  if (minutos < 60) {
+    return 'hace ' + minutos + (minutos === 1 ? ' minuto' : ' minutos');
+  }
+
+  const horas = Math.floor(minutos / 60);
+  if (horas < 24) {
+    return 'hace ' + horas + (horas === 1 ? ' hora' : ' horas');
+  }
+
+  const dias = Math.floor(horas / 24);
+  return 'hace ' + dias + (dias === 1 ? ' día' : ' días');
 }
 
 // Avisos pedidos: un día, seis horas, una hora y un cuarto de hora antes.
@@ -197,8 +216,9 @@ function umbralTarea(tarea) {
   return UMBRALES_AVISO.find(umbral => restan <= umbral.minutos) || null;
 }
 
+// Comparación directa de instantes, sin redondeos intermedios.
 function fechaVencida(tarea) {
-  return !tarea.completada && minutosRestantes(tarea) < 0;
+  return !tarea.completada && fechaHoraTarea(tarea).getTime() < Date.now();
 }
 
 /* EXPORTAR AL CALENDARIO */
@@ -955,6 +975,16 @@ function actualizarRecordatorios() {
 
   panel.replaceChildren();
 
+  // Sin permiso no llegan notificaciones, y conviene decir por qué.
+  if ('Notification' in window && Notification.permission !== 'granted') {
+    const avisoPermiso = document.createElement("p");
+    avisoPermiso.className = "aviso-permiso";
+    avisoPermiso.textContent = Notification.permission === 'denied'
+      ? '🔕 Las notificaciones están bloqueadas en este navegador. Los avisos solo aparecerán en este panel.'
+      : '🔔 Pulsa «Activar avisos de entrega» para que el navegador te notifique.';
+    panel.appendChild(avisoPermiso);
+  }
+
   // El aviso de la meta se muestra siempre, haya entregas próximas o no.
   const avance = avanceSemanal();
   const avisoMeta = document.createElement("div");
@@ -992,7 +1022,8 @@ function actualizarRecordatorios() {
 
     if (fechaVencida(tarea)) {
       estado.className = 'aviso-critico';
-      estado.textContent = '🔴 Vencida · era a las ' + formatoHora(tarea);
+      estado.textContent = '🔴 Vencida ' + textoRetraso(tarea) +
+        ' · era a las ' + formatoHora(tarea);
     } else {
       const umbral = umbralTarea(tarea);
       estado.className = umbral.clase;
@@ -1029,15 +1060,28 @@ function notificarUmbrales() {
   const vigentes = [];
 
   tareas.forEach(tarea => {
-    const umbral = umbralTarea(tarea);
-    if (!umbral) return;
+    if (tarea.completada) return;
 
-    const marca = tarea.id + ':' + umbral.minutos;
+    let marca;
+    let titulo;
+
+    // El vencimiento también avisa; antes se quedaba fuera porque
+    // umbralTarea devuelve null en cuanto el plazo ya pasó.
+    if (fechaVencida(tarea)) {
+      marca = tarea.id + ':vencida';
+      titulo = 'NOTIX · Tarea vencida';
+    } else {
+      const umbral = umbralTarea(tarea);
+      if (!umbral) return;
+      marca = tarea.id + ':' + umbral.minutos;
+      titulo = 'NOTIX · ' + umbral.etiqueta;
+    }
+
     vigentes.push(marca);
 
     if (enviados.includes(marca)) return;
 
-    new Notification('NOTIX · ' + umbral.etiqueta, {
+    new Notification(titulo, {
       body: tarea.titulo + ' · ' + tarea.materia + ' · entrega ' + formatoHora(tarea),
       tag: marca
     });
@@ -1127,11 +1171,12 @@ actualizarBotonAvisos();
 actualizarRecordatorios();
 notificarUmbrales();
 
-// Revisar cada minuto si alguna tarea cruzó un umbral.
+// Cada 30 segundos, para que el aviso de los 15 minutos y el de vencimiento
+// no lleguen con casi un minuto de retraso.
 setInterval(function() {
   actualizarRecordatorios();
   notificarUmbrales();
-}, 60000);
+}, 30000);
 
 /* PERFIL DEL ESTUDIANTE */
 

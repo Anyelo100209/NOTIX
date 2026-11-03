@@ -1062,3 +1062,21 @@ nav.navegacion-tareas {
     max-height: 260px;
   }
 }
+
+/* Aviso de permiso de notificaciones pendiente o bloqueado */
+.aviso-permiso {
+  margin: 0 0 12px;
+  padding: 10px 13px;
+  border: 1px dashed #e0c48a;
+  border-radius: 10px;
+  background: #fdf8ec;
+  color: #7a5a00;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+:root[data-tema="oscuro"] .aviso-permiso {
+  background: #33301f;
+  border-color: #6b5a2f;
+  color: #f3e4bd;
+}
