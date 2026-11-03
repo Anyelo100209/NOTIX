@@ -146,7 +146,10 @@ function mostrarTareas() {
   pintarLista(listaTareas, pendientes, 'pendientes', textoPendientes);
   pintarLista(listaCompletadas, terminadas, 'completadas', textoCompletadas);
   mostrarResumen();
-  document.getElementById('botonLimpiar').disabled = !tareas.some(tarea => tarea.completada);
+  actualizarRecordatorios();
+
+  const botonLimpiar = document.getElementById('botonLimpiar');
+  if (botonLimpiar) botonLimpiar.disabled = !tareas.some(tarea => tarea.completada);
 }
 
 function coincideBusqueda(tarea, texto) {
@@ -599,21 +602,19 @@ seccionRecordatorios.append(
   contenidoRecordatorios
 );
 
-// Colocar la sección antes del resumen de tareas
-const resumen = document.querySelector(".resumen");
+// Colocar la sección dentro de la vista de pendientes.
+// Queda debajo del tablero y encima del formulario y el listado.
+const bloqueColumnas = document.querySelector('.columnas');
+const zonaKanban = document.querySelector('.zona-kanban-avance');
 
-if (resumen) {
-  resumen.parentNode.insertBefore(seccionRecordatorios, resumen);
+if (bloqueColumnas) {
+  bloqueColumnas.parentNode.insertBefore(seccionRecordatorios, bloqueColumnas);
+} else if (zonaKanban) {
+  zonaKanban.insertAdjacentElement('afterend', seccionRecordatorios);
 }
 
-// Actualizar al interactuar con las tareas
-document.addEventListener("click", () => {
-  setTimeout(actualizarRecordatorios, 100);
-});
-
-document.addEventListener("submit", () => {
-  setTimeout(actualizarRecordatorios, 100);
-});
+// Pintar los avisos con las tareas que ya estén cargadas.
+actualizarRecordatorios();
 
 // Revisar periódicamente las fechas
 setInterval(actualizarRecordatorios, 60000);
