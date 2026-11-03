@@ -101,12 +101,19 @@ function guardarTareas() {
 
 function mostrarResumen() {
   const terminadas = tareas.filter(tarea => tarea.completada).length;
+  const enProceso = tareas.filter(tarea => estadoTarea(tarea) === 'proceso').length;
+  const porHacer = tareas.filter(tarea => estadoTarea(tarea) === 'pendiente').length;
   const pendientes = tareas.length - terminadas;
   const porcentaje = tareas.length > 0 ? Math.round((terminadas / tareas.length) * 100) : 0;
 
   const porcentajeAvance = document.getElementById('porcentajeAvance');
+  const avanceRazon = document.getElementById('avanceRazon');
   const progresoRelleno = document.getElementById('progresoRelleno');
   const barraAvance = document.getElementById('barraAvance');
+  const avancePendientes = document.getElementById('avancePendientes');
+  const avanceProceso = document.getElementById('avanceProceso');
+  const avanceCompletadas = document.getElementById('avanceCompletadas');
+  const avanceMeta = document.getElementById('avanceMeta');
   const menuPendientes = document.getElementById('menuPendientes');
   const menuCompletadas = document.getElementById('menuCompletadas');
   const cantidadCompletadas = document.getElementById('cantidadCompletadas');
@@ -114,6 +121,25 @@ function mostrarResumen() {
   if (porcentajeAvance) porcentajeAvance.textContent = porcentaje + '%';
   if (progresoRelleno) progresoRelleno.style.width = porcentaje + '%';
   if (barraAvance) barraAvance.setAttribute('aria-valuenow', porcentaje);
+
+  // El porcentaje solo se entiende si se ve sobre cuántas tareas se calcula.
+  if (avanceRazon) {
+    avanceRazon.textContent = tareas.length === 0
+      ? 'Aún no hay tareas'
+      : terminadas + ' de ' + tareas.length + ' tareas';
+  }
+
+  if (avancePendientes) avancePendientes.textContent = porHacer;
+  if (avanceProceso) avanceProceso.textContent = enProceso;
+  if (avanceCompletadas) avanceCompletadas.textContent = terminadas;
+
+  if (avanceMeta) {
+    const semanal = avanceSemanal();
+    avanceMeta.textContent = semanal.cumplida
+      ? '🎉 Meta semanal cumplida'
+      : 'Meta semanal: ' + semanal.completadas + ' de ' + semanal.meta;
+  }
+
   if (menuPendientes) menuPendientes.textContent = pendientes;
   if (menuCompletadas) menuCompletadas.textContent = terminadas;
   if (cantidadCompletadas) cantidadCompletadas.textContent = terminadas;
@@ -122,6 +148,12 @@ function mostrarResumen() {
 function formatoFecha(fechaTexto) {
   const fecha = new Date(fechaTexto + 'T12:00:00');
   return fecha.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// Versión sin año, para las tarjetas estrechas del tablero.
+function formatoFechaCorta(fechaTexto) {
+  const fecha = new Date(fechaTexto + 'T12:00:00');
+  return fecha.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
 }
 
 /* HORA DE ENTREGA Y CUENTA ATRÁS */
@@ -377,15 +409,18 @@ function cambiarEstadoTarea(id, estado) {
 
 // Tarjeta compacta con el selector de estado.
 function crearTarjetaKanban(tarea) {
+  const estado = estadoTarea(tarea);
+
   const tarjeta = document.createElement('article');
-  tarjeta.className = 'kanban-tarjeta';
+  tarjeta.className = 'kanban-tarjeta kanban-' + estado;
+  if (fechaVencida(tarea)) tarjeta.classList.add('kanban-vencida');
 
   const titulo = document.createElement('strong');
   titulo.textContent = tarea.titulo;
 
   const detalle = document.createElement('p');
   detalle.textContent = tarea.materia +
-    (tarea.fecha ? ' · ' + formatoFecha(tarea.fecha) + ' ' + formatoHora(tarea) : '');
+    (tarea.fecha ? ' · ' + formatoFechaCorta(tarea.fecha) + ' ' + formatoHora(tarea) : '');
 
   const selector = document.createElement('select');
   selector.setAttribute('aria-label', 'Estado de ' + tarea.titulo);
@@ -403,7 +438,7 @@ function crearTarjetaKanban(tarea) {
     selector.appendChild(elemento);
   });
 
-  selector.value = estadoTarea(tarea);
+  selector.value = estado;
 
   selector.addEventListener('change', function() {
     cambiarEstadoTarea(tarea.id, selector.value);

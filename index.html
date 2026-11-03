@@ -135,22 +135,28 @@
 
   <div class="kanban-columnas">
 
-    <div class="kanban-columna">
-      <h3>Por hacer</h3>
-      <strong class="kanban-contador" id="contadorKanbanPendiente">0</strong>
-      <div id="kanbanPendiente"></div>
+    <div class="kanban-columna" data-estado="pendiente">
+      <div class="kanban-columna-encabezado">
+        <h3><span class="kanban-punto" aria-hidden="true"></span>Por hacer</h3>
+        <strong class="kanban-contador" id="contadorKanbanPendiente">0</strong>
+      </div>
+      <div class="kanban-lista" id="kanbanPendiente"></div>
     </div>
 
-    <div class="kanban-columna">
-      <h3>En proceso</h3>
-      <strong class="kanban-contador" id="contadorKanbanProceso">0</strong>
-      <div id="kanbanProceso"></div>
+    <div class="kanban-columna" data-estado="proceso">
+      <div class="kanban-columna-encabezado">
+        <h3><span class="kanban-punto" aria-hidden="true"></span>En proceso</h3>
+        <strong class="kanban-contador" id="contadorKanbanProceso">0</strong>
+      </div>
+      <div class="kanban-lista" id="kanbanProceso"></div>
     </div>
 
-    <div class="kanban-columna">
-      <h3>Completadas</h3>
-      <strong class="kanban-contador" id="contadorKanbanCompletada">0</strong>
-      <div id="kanbanCompletada"></div>
+    <div class="kanban-columna" data-estado="completada">
+      <div class="kanban-columna-encabezado">
+        <h3><span class="kanban-punto" aria-hidden="true"></span>Completadas</h3>
+        <strong class="kanban-contador" id="contadorKanbanCompletada">0</strong>
+      </div>
+      <div class="kanban-lista" id="kanbanCompletada"></div>
     </div>
 
   </div>
@@ -160,7 +166,10 @@
 <article class="resumen-tarjeta resumen-avance">
   <span class="resumen-nombre">Tu avance</span>
 
-  <strong id="porcentajeAvance">0%</strong>
+  <div class="avance-cifra">
+    <strong id="porcentajeAvance">0%</strong>
+    <span id="avanceRazon">0 de 0 tareas</span>
+  </div>
 
   <div class="barra-progreso"
        role="progressbar"
@@ -171,6 +180,23 @@
        id="barraAvance">
     <span id="progresoRelleno"></span>
   </div>
+
+  <ul class="avance-detalle">
+    <li>
+      <span>Por hacer</span>
+      <strong id="avancePendientes">0</strong>
+    </li>
+    <li>
+      <span>En proceso</span>
+      <strong id="avanceProceso">0</strong>
+    </li>
+    <li>
+      <span>Completadas</span>
+      <strong id="avanceCompletadas">0</strong>
+    </li>
+  </ul>
+
+  <p class="avance-meta" id="avanceMeta"></p>
 </article>
 
 </div> <!-- Fin de zona-kanban-avance -->

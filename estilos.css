@@ -524,9 +524,10 @@ nav.navegacion-tareas {
 
 .zona-kanban-avance {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(220px, 1fr);
+  grid-template-columns: minmax(0, 3fr) minmax(250px, 1fr);
   gap: 15px;
-  align-items: stretch;
+  /* 'start' evita que la tarjeta de avance se estire a la altura del tablero */
+  align-items: start;
   margin-bottom: 25px;
 }
 
@@ -541,13 +542,12 @@ nav.navegacion-tareas {
   display: none;
 }
 
-/* Conservar la tarjeta azul */
+/* Tarjeta de avance: alta solo lo que necesita su contenido */
 .zona-kanban-avance .resumen-avance {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
-  min-height: 180px;
+  display: block;
+  height: auto;
+  min-height: 0;
+  padding: 20px;
 }
 
 /* Tablero Kanban */
@@ -570,37 +570,98 @@ nav.navegacion-tareas {
   background: #f1f5ff;
 }
 
+/* Título y contador en la misma línea, como en los tableros habituales */
+.kanban-columna-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 .kanban-columna h3 {
-  margin: 0 0 12px;
-  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 13px;
   color: #263754;
+}
+
+/* Punto de color que identifica cada estado */
+.kanban-punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+[data-estado="pendiente"] .kanban-punto { background: #64748b; }
+[data-estado="proceso"] .kanban-punto { background: #d97706; }
+[data-estado="completada"] .kanban-punto { background: #15803d; }
+
+.kanban-contador {
+  min-width: 24px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #d4dce9;
+  color: #263754;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* La columna no crece sin límite: a partir de cierto alto, se desplaza */
+.kanban-lista {
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .kanban-tarjeta {
   background: #ffffff;
-  border-left: 4px solid #4169e1;
+  border-left: 4px solid #64748b;
   border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 10px;
+  padding: 11px;
+  margin-bottom: 9px;
   overflow-wrap: anywhere;
 }
 
+.kanban-tarjeta:last-child {
+  margin-bottom: 0;
+}
+
+.kanban-proceso { border-left-color: #d97706; }
+.kanban-completada { border-left-color: #15803d; }
+.kanban-vencida { border-left-color: #c62828; }
+
 .kanban-tarjeta strong {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
+  font-size: 13px;
+  line-height: 1.35;
 }
 
 .kanban-tarjeta p {
-  font-size: 12px;
+  margin: 0 0 9px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--gris);
+}
+
+.kanban-completada strong {
+  text-decoration: line-through;
+  opacity: .75;
 }
 
 .kanban-tarjeta select {
   width: 100%;
-  padding: 8px;
+  padding: 6px 8px;
   border-radius: 7px;
   border: 1px solid #d4dce9;
   background: #ffffff;
   color: #263754;
+  font-size: 12px;
 }
 
 /* Modo oscuro */
@@ -895,5 +956,109 @@ nav.navegacion-tareas {
 
   .boton-avisos {
     width: 100%;
+  }
+}
+
+/* =================================
+   TARJETA DE AVANCE REDISEÑADA
+   ================================= */
+
+.avance-cifra {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+/* El porcentaje ya no necesita el tamaño gigante del diseño anterior */
+.resumen-avance .avance-cifra strong {
+  margin: 8px 0 0;
+  font-size: 34px;
+  line-height: 1;
+}
+
+#avanceRazon {
+  font-size: 12px;
+  color: #d7e1ff;
+}
+
+/* Desglose por estado */
+.avance-detalle {
+  display: grid;
+  gap: 7px;
+  margin: 16px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, .28);
+  list-style: none;
+}
+
+.avance-detalle li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.avance-detalle span {
+  font-size: 12px;
+  color: #d7e1ff;
+}
+
+/* Sin esto heredarían los 32px de .resumen-tarjeta strong */
+.resumen-avance .avance-detalle strong {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.avance-meta {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, .28);
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* Barra de desplazamiento discreta en las columnas del tablero */
+.kanban-lista::-webkit-scrollbar {
+  width: 6px;
+}
+
+.kanban-lista::-webkit-scrollbar-thumb {
+  background: #c7d2e5;
+  border-radius: 10px;
+}
+
+/* Modo oscuro */
+:root[data-tema="oscuro"] .kanban-contador {
+  background: #25334b;
+  border-color: #44536b;
+  color: #f1f5ff;
+}
+
+:root[data-tema="oscuro"] .kanban-tarjeta p {
+  color: #aab8d0;
+}
+
+:root[data-tema="oscuro"] .kanban-lista::-webkit-scrollbar-thumb {
+  background: #44536b;
+}
+
+/* Adaptación a celulares */
+@media (max-width: 900px) {
+  /* En una sola columna el tablero ya no compite con la tarjeta de avance */
+  .kanban-lista {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 600px) {
+  .resumen-avance .avance-cifra strong {
+    font-size: 30px;
+  }
+
+  .kanban-lista {
+    max-height: 260px;
   }
 }
