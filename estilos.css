@@ -789,3 +789,111 @@ nav.navegacion-tareas {
   line-height: 1.5;
   color: var(--gris);
 }
+
+/* =================================
+   AVISOS POR UMBRAL Y CALENDARIO
+   ================================= */
+
+/* Encabezado del panel de recordatorios */
+.recordatorios-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.recordatorios-encabezado h2 {
+  margin: 0;
+}
+
+.boton-avisos {
+  padding: 9px 14px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--azul);
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+
+.boton-avisos:hover:not(:disabled) {
+  background: var(--azul-claro);
+  border-color: var(--azul);
+}
+
+.boton-avisos:disabled {
+  color: var(--gris);
+  cursor: default;
+}
+
+.recordatorios-nota {
+  margin: 10px 0 16px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--gris);
+}
+
+/* Colores por cercanía de la entrega */
+.aviso-critico { color: #c62828; }
+.aviso-urgente { color: #d97706; }
+.aviso-proximo { color: #a16207; }
+.aviso-lejano  { color: #1d4ed8; }
+
+/* Etiqueta de cuenta atrás en la tarjeta de la tarea */
+.cuenta-atras {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: #f1f4fa;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.cuenta-atras.aviso-critico { background: #fdeaea; }
+.cuenta-atras.aviso-urgente { background: #fdf0e0; }
+.cuenta-atras.aviso-proximo { background: #fbf5e0; }
+.cuenta-atras.aviso-lejano  { background: var(--azul-claro); }
+
+/* Botones de exportación al calendario */
+.accion-calendario {
+  font-size: 11px;
+}
+
+/* Modo oscuro */
+:root[data-tema="oscuro"] .boton-avisos {
+  background: #202c40;
+  border-color: #44536b;
+  color: #9fb8ff;
+}
+
+:root[data-tema="oscuro"] .boton-avisos:hover:not(:disabled) {
+  background: #25334b;
+  border-color: #9fb8ff;
+}
+
+:root[data-tema="oscuro"] .aviso-critico { color: #ff9b9b; }
+:root[data-tema="oscuro"] .aviso-urgente { color: #ffc07a; }
+:root[data-tema="oscuro"] .aviso-proximo { color: #f2dd93; }
+:root[data-tema="oscuro"] .aviso-lejano  { color: #9fb8ff; }
+
+:root[data-tema="oscuro"] .cuenta-atras { background: #25334b; }
+:root[data-tema="oscuro"] .cuenta-atras.aviso-critico { background: #3d2222; }
+:root[data-tema="oscuro"] .cuenta-atras.aviso-urgente { background: #3d3022; }
+:root[data-tema="oscuro"] .cuenta-atras.aviso-proximo { background: #3a3622; }
+:root[data-tema="oscuro"] .cuenta-atras.aviso-lejano  { background: #22304d; }
+
+/* Adaptación a celulares */
+@media (max-width: 600px) {
+  .recordatorios-encabezado {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .boton-avisos {
+    width: 100%;
+  }
+}

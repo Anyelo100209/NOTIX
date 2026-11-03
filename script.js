@@ -124,9 +124,144 @@ function formatoFecha(fechaTexto) {
   return fecha.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+/* HORA DE ENTREGA Y CUENTA ATRÁS */
+
+// La hora es opcional. Si no se indicó, la entrega se toma a las 8:00 a.m.
+const HORA_POR_DEFECTO = '08:00';
+
+function horaTarea(tarea) {
+  return /^\d{2}:\d{2}$/.test(tarea.hora || '') ? tarea.hora : HORA_POR_DEFECTO;
+}
+
+// Sin la 'Z' final, el navegador interpreta la fecha en la zona local.
+function fechaHoraTarea(tarea) {
+  return new Date(tarea.fecha + 'T' + horaTarea(tarea) + ':00');
+}
+
+function formatoHora(tarea) {
+  return fechaHoraTarea(tarea)
+    .toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' });
+}
+
+function minutosRestantes(tarea) {
+  return Math.round((fechaHoraTarea(tarea).getTime() - Date.now()) / 60000);
+}
+
+// Avisos pedidos: un día, seis horas, una hora y un cuarto de hora antes.
+const UMBRALES_AVISO = [
+  { minutos: 15, etiqueta: 'Faltan 15 minutos', icono: '🔴', clase: 'aviso-critico' },
+  { minutos: 60, etiqueta: 'Falta 1 hora', icono: '🟠', clase: 'aviso-urgente' },
+  { minutos: 360, etiqueta: 'Faltan 6 horas', icono: '🟡', clase: 'aviso-proximo' },
+  { minutos: 1440, etiqueta: 'Faltan 24 horas', icono: '🔵', clase: 'aviso-lejano' }
+];
+
+// Devuelve el umbral más cercano que la tarea ya cruzó.
+function umbralTarea(tarea) {
+  if (tarea.completada) return null;
+
+  const restan = minutosRestantes(tarea);
+  if (restan < 0) return null;
+
+  return UMBRALES_AVISO.find(umbral => restan <= umbral.minutos) || null;
+}
+
 function fechaVencida(tarea) {
-  const hoy = fechaEjemplo(0);
-  return !tarea.completada && tarea.fecha < hoy;
+  return !tarea.completada && minutosRestantes(tarea) < 0;
+}
+
+/* EXPORTAR AL CALENDARIO */
+
+const DURACION_EVENTO = 60 * 60 * 1000;
+
+// Formato de fecha y hora que piden Google Calendar y el estándar iCalendar.
+function textoUTC(fecha) {
+  return fecha.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+}
+
+function descripcionTarea(tarea) {
+  return (tarea.detalle ? tarea.detalle + '\n\n' : '') +
+    'Materia: ' + tarea.materia +
+    '\nPrioridad: ' + tarea.prioridad +
+    '\n\nCreado con NOTIX.';
+}
+
+// URLSearchParams se encarga de codificar los textos del usuario.
+function enlaceGoogleCalendar(tarea) {
+  const inicio = fechaHoraTarea(tarea);
+  const fin = new Date(inicio.getTime() + DURACION_EVENTO);
+
+  const parametros = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: 'NOTIX: ' + tarea.titulo,
+    dates: textoUTC(inicio) + '/' + textoUTC(fin),
+    details: descripcionTarea(tarea)
+  });
+
+  return 'https://calendar.google.com/calendar/render?' + parametros.toString();
+}
+
+// El estándar iCalendar exige escapar estos caracteres en los textos.
+function escaparICS(texto) {
+  return String(texto || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\r?\n/g, '\\n');
+}
+
+function contenidoICS(tarea) {
+  const inicio = fechaHoraTarea(tarea);
+  const fin = new Date(inicio.getTime() + DURACION_EVENTO);
+
+  const lineas = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//NOTIX//Agenda academica//ES',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    'UID:notix-' + tarea.id + '@notix.local',
+    'DTSTAMP:' + textoUTC(new Date()),
+    'DTSTART:' + textoUTC(inicio),
+    'DTEND:' + textoUTC(fin),
+    'SUMMARY:' + escaparICS('NOTIX: ' + tarea.titulo),
+    'DESCRIPTION:' + escaparICS(descripcionTarea(tarea)),
+    'STATUS:CONFIRMED'
+  ];
+
+  // Un VALARM por cada umbral. Outlook y Apple Calendar los respetan.
+  const avisos = [
+    { disparo: '-PT24H', texto: 'Faltan 24 horas' },
+    { disparo: '-PT6H', texto: 'Faltan 6 horas' },
+    { disparo: '-PT1H', texto: 'Falta 1 hora' },
+    { disparo: '-PT15M', texto: 'Faltan 15 minutos' }
+  ];
+
+  avisos.forEach(aviso => {
+    lineas.push(
+      'BEGIN:VALARM',
+      'ACTION:DISPLAY',
+      'TRIGGER:' + aviso.disparo,
+      'DESCRIPTION:' + escaparICS(aviso.texto + ' para ' + tarea.titulo),
+      'END:VALARM'
+    );
+  });
+
+  lineas.push('END:VEVENT', 'END:VCALENDAR');
+  return lineas.join('\r\n');
+}
+
+function descargarICS(tarea) {
+  const blob = new Blob([contenidoICS(tarea)], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const enlace = document.createElement('a');
+
+  enlace.href = url;
+  enlace.download = 'notix-' + tarea.id + '.ics';
+  document.body.appendChild(enlace);
+  enlace.click();
+  enlace.remove();
+  URL.revokeObjectURL(url);
 }
 
 // Se crean las tarjetas con el DOM. Los textos que escribe el usuario
@@ -170,10 +305,40 @@ function crearTarjeta(tarea) {
   const fecha = tarjeta.querySelector('.tarea-fecha');
   fecha.textContent = tarea.completada
     ? '✓ Completada' + (tarea.fechaCompletada ? ' el ' + formatoFecha(tarea.fechaCompletada) : '')
-    : '📅 Entrega: ' + formatoFecha(tarea.fecha);
+    : '📅 Entrega: ' + formatoFecha(tarea.fecha) + ' · ' + formatoHora(tarea);
+
   if (fechaVencida(tarea)) {
     fecha.textContent += ' · Vencida';
     fecha.classList.add('vencida');
+  } else if (!tarea.completada) {
+    const umbral = umbralTarea(tarea);
+    if (umbral) {
+      const cuenta = document.createElement('span');
+      cuenta.className = 'cuenta-atras ' + umbral.clase;
+      cuenta.textContent = umbral.etiqueta;
+      fecha.after(cuenta);
+    }
+  }
+
+  // Exportar al calendario solo tiene sentido en tareas sin terminar.
+  if (!tarea.completada) {
+    const acciones = tarjeta.querySelector('.acciones');
+
+    const google = document.createElement('button');
+    google.type = 'button';
+    google.className = 'accion accion-calendario';
+    google.dataset.accion = 'google';
+    google.title = 'Añadir esta tarea a Google Calendar';
+    google.textContent = '📅 Google';
+
+    const ics = document.createElement('button');
+    ics.type = 'button';
+    ics.className = 'accion accion-calendario';
+    ics.dataset.accion = 'ics';
+    ics.title = 'Descargar archivo .ics con los cuatro avisos';
+    ics.textContent = '⬇ .ics';
+
+    acciones.append(google, ics);
   }
 
   tarjeta.querySelector('.completar').textContent = tarea.completada ? '↩ Reabrir' : '✓ Terminar';
@@ -220,7 +385,7 @@ function crearTarjetaKanban(tarea) {
 
   const detalle = document.createElement('p');
   detalle.textContent = tarea.materia +
-    (tarea.fecha ? ' · ' + formatoFecha(tarea.fecha) : '');
+    (tarea.fecha ? ' · ' + formatoFecha(tarea.fecha) + ' ' + formatoHora(tarea) : '');
 
   const selector = document.createElement('select');
   selector.setAttribute('aria-label', 'Estado de ' + tarea.titulo);
@@ -265,8 +430,8 @@ function mostrarKanban() {
   tareas.forEach(tarea => grupos[estadoTarea(tarea)].push(tarea));
 
   // Lo que falta por hacer se ordena por entrega; lo hecho, por lo más reciente.
-  grupos.pendiente.sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
-  grupos.proceso.sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
+  grupos.pendiente.sort((a, b) => fechaHoraTarea(a) - fechaHoraTarea(b));
+  grupos.proceso.sort((a, b) => fechaHoraTarea(a) - fechaHoraTarea(b));
   grupos.completada.sort((a, b) =>
     (b.fechaCompletada || b.fecha || '').localeCompare(a.fechaCompletada || a.fecha || '')
   );
@@ -303,7 +468,7 @@ function mostrarTareas() {
 
   const pendientes = tareas.filter(tarea =>
     !tarea.completada && coincideBusqueda(tarea, textoPendientes)
-  ).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  ).sort((a, b) => fechaHoraTarea(a) - fechaHoraTarea(b));
 
   const terminadas = tareas.filter(tarea =>
     tarea.completada && coincideBusqueda(tarea, textoCompletadas)
@@ -314,6 +479,7 @@ function mostrarTareas() {
   mostrarResumen();
   mostrarKanban();
   actualizarRecordatorios();
+  notificarUmbrales();
 
   const botonLimpiar = document.getElementById('botonLimpiar');
   if (botonLimpiar) botonLimpiar.disabled = !tareas.some(tarea => tarea.completada);
@@ -375,6 +541,7 @@ formulario.addEventListener('submit', function(evento) {
   const titulo = document.getElementById('tituloTarea').value.trim();
   const materia = document.getElementById('materiaTarea').value.trim();
   const fecha = document.getElementById('fechaTarea').value;
+  const hora = document.getElementById('horaTarea').value;
   const prioridad = document.getElementById('prioridadTarea').value;
   const detalle = document.getElementById('detalleTarea').value.trim();
 
@@ -385,10 +552,17 @@ formulario.addEventListener('submit', function(evento) {
 
   if (tareaEnEdicion !== null) {
     const tarea = tareas.find(tarea => tarea.id === tareaEnEdicion);
-    if (tarea) Object.assign(tarea, { titulo, materia, fecha, prioridad, detalle });
+    if (tarea) {
+      Object.assign(tarea, { titulo, materia, fecha, prioridad, detalle });
+      // Si se deja vacía, la tarea vuelve a usar la hora por defecto.
+      if (hora) tarea.hora = hora;
+      else delete tarea.hora;
+    }
     mensajeFormulario.textContent = 'Actividad actualizada correctamente.';
   } else {
-    tareas.push({ id: Date.now(), titulo, materia, fecha, prioridad, detalle, completada: false });
+    const nueva = { id: Date.now(), titulo, materia, fecha, prioridad, detalle, completada: false };
+    if (hora) nueva.hora = hora;
+    tareas.push(nueva);
     mensajeFormulario.textContent = 'Actividad guardada correctamente.';
   }
 
@@ -418,11 +592,20 @@ function gestionarAccionTarea(evento) {
     mostrarTareas();
   }
 
+  if (boton.dataset.accion === 'google') {
+    window.open(enlaceGoogleCalendar(tarea), '_blank', 'noopener');
+  }
+
+  if (boton.dataset.accion === 'ics') {
+    descargarICS(tarea);
+  }
+
   if (boton.dataset.accion === 'editar') {
     tareaEnEdicion = tarea.id;
     document.getElementById('tituloTarea').value = tarea.titulo;
     document.getElementById('materiaTarea').value = tarea.materia;
     document.getElementById('fechaTarea').value = tarea.fecha;
+    document.getElementById('horaTarea').value = tarea.hora || '';
     document.getElementById('prioridadTarea').value = tarea.prioridad;
     document.getElementById('detalleTarea').value = tarea.detalle || '';
     document.getElementById('tituloFormulario').textContent = 'Editar actividad';
@@ -726,16 +909,14 @@ function actualizarRecordatorios() {
   const panel = document.getElementById("recordatoriosNotix");
   if (!panel) return;
 
-  const hoy = fechaEjemplo(0);
-  const manana = fechaEjemplo(1);
-
-  const pendientes = tareas.filter(tarea =>
+  // Entran las tareas vencidas y las que ya cruzaron algún umbral de aviso.
+  const proximas = tareas.filter(tarea =>
     !tarea.completada &&
     tarea.fecha &&
-    tarea.fecha <= manana
+    (fechaVencida(tarea) || umbralTarea(tarea))
   );
 
-  pendientes.sort((a, b) => a.fecha.localeCompare(b.fecha));
+  proximas.sort((a, b) => fechaHoraTarea(a) - fechaHoraTarea(b));
 
   panel.replaceChildren();
 
@@ -758,14 +939,14 @@ function actualizarRecordatorios() {
 
   panel.appendChild(avisoMeta);
 
-  if (pendientes.length === 0) {
+  if (proximas.length === 0) {
     const mensaje = document.createElement("p");
-    mensaje.textContent = "¡Estás al día! No tienes entregas próximas.";
+    mensaje.textContent = "¡Estás al día! No tienes entregas en las próximas 24 horas.";
     panel.appendChild(mensaje);
     return;
   }
 
-  pendientes.forEach(tarea => {
+  proximas.forEach(tarea => {
     const aviso = document.createElement("div");
     aviso.className = "aviso-notix";
 
@@ -774,12 +955,14 @@ function actualizarRecordatorios() {
 
     const estado = document.createElement("span");
 
-    if (tarea.fecha < hoy) {
-      estado.textContent = "🔴 Tarea vencida";
-    } else if (tarea.fecha === hoy) {
-      estado.textContent = "🟠 Entrega hoy";
+    if (fechaVencida(tarea)) {
+      estado.className = 'aviso-critico';
+      estado.textContent = '🔴 Vencida · era a las ' + formatoHora(tarea);
     } else {
-      estado.textContent = "🔵 Entrega mañana";
+      const umbral = umbralTarea(tarea);
+      estado.className = umbral.clase;
+      estado.textContent = umbral.icono + ' ' + umbral.etiqueta +
+        ' · ' + formatoHora(tarea);
     }
 
     aviso.append(titulo, estado);
@@ -787,18 +970,109 @@ function actualizarRecordatorios() {
   });
 }
 
+/* AVISOS DEL NAVEGADOR */
+
+// Se guarda qué avisos ya se mostraron para no repetirlos cada minuto.
+function claveAvisos() {
+  return 'notix_avisos_' + usuarioActivo.id;
+}
+
+function avisosEnviados() {
+  try {
+    const datos = JSON.parse(localStorage.getItem(claveAvisos()) || '[]');
+    return Array.isArray(datos) ? datos : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function notificarUmbrales() {
+  if (!usuarioActivo) return;
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+  const enviados = avisosEnviados();
+  const vigentes = [];
+
+  tareas.forEach(tarea => {
+    const umbral = umbralTarea(tarea);
+    if (!umbral) return;
+
+    const marca = tarea.id + ':' + umbral.minutos;
+    vigentes.push(marca);
+
+    if (enviados.includes(marca)) return;
+
+    new Notification('NOTIX · ' + umbral.etiqueta, {
+      body: tarea.titulo + ' · ' + tarea.materia + ' · entrega ' + formatoHora(tarea),
+      tag: marca
+    });
+  });
+
+  // Solo se recuerdan los avisos vigentes, así la lista no crece sin control.
+  localStorage.setItem(claveAvisos(), JSON.stringify(vigentes));
+}
+
+function actualizarBotonAvisos() {
+  const boton = document.getElementById('botonAvisos');
+  if (!boton) return;
+
+  if (!('Notification' in window)) {
+    boton.textContent = '🔕 Tu navegador no admite avisos';
+    boton.disabled = true;
+    return;
+  }
+
+  if (Notification.permission === 'granted') {
+    boton.textContent = '🔔 Avisos activados';
+  } else if (Notification.permission === 'denied') {
+    boton.textContent = '🔕 Avisos bloqueados en el navegador';
+  } else {
+    boton.textContent = '🔔 Activar avisos de entrega';
+  }
+
+  boton.disabled = Notification.permission !== 'default';
+}
+
 // Crear la sección de recordatorios
 const seccionRecordatorios = document.createElement("section");
 seccionRecordatorios.className = "panel panel-recordatorios";
 
+const encabezadoRecordatorios = document.createElement("div");
+encabezadoRecordatorios.className = "recordatorios-encabezado";
+
 const tituloRecordatorios = document.createElement("h2");
 tituloRecordatorios.textContent = "🔔 Recordatorios de entrega";
+
+// Permiso de notificaciones: el navegador exige un gesto del usuario.
+const botonAvisos = document.createElement("button");
+botonAvisos.type = "button";
+botonAvisos.id = "botonAvisos";
+botonAvisos.className = "boton-avisos";
+
+botonAvisos.addEventListener("click", function() {
+  if (!('Notification' in window)) return;
+
+  Notification.requestPermission().then(function() {
+    actualizarBotonAvisos();
+    notificarUmbrales();
+  });
+});
+
+encabezadoRecordatorios.append(tituloRecordatorios, botonAvisos);
+
+const notaRecordatorios = document.createElement("p");
+notaRecordatorios.className = "recordatorios-nota";
+notaRecordatorios.textContent =
+  'Los avisos llegan 24 horas, 6 horas, 1 hora y 15 minutos antes de la entrega, ' +
+  'mientras NOTIX esté abierto. Para que te avise con la app cerrada, exporta la ' +
+  'tarea a tu calendario con los botones de cada tarjeta.';
 
 const contenidoRecordatorios = document.createElement("div");
 contenidoRecordatorios.id = "recordatoriosNotix";
 
 seccionRecordatorios.append(
-  tituloRecordatorios,
+  encabezadoRecordatorios,
+  notaRecordatorios,
   contenidoRecordatorios
 );
 
@@ -814,10 +1088,15 @@ if (bloqueColumnas) {
 }
 
 // Pintar los avisos con las tareas que ya estén cargadas.
+actualizarBotonAvisos();
 actualizarRecordatorios();
+notificarUmbrales();
 
-// Revisar periódicamente las fechas
-setInterval(actualizarRecordatorios, 60000);
+// Revisar cada minuto si alguna tarea cruzó un umbral.
+setInterval(function() {
+  actualizarRecordatorios();
+  notificarUmbrales();
+}, 60000);
 
 /* PERFIL DEL ESTUDIANTE */
 

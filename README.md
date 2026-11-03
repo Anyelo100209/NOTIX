@@ -28,7 +28,8 @@ No requiere instalación de paquetes ni proceso de compilación.
 
 ### Gestión de tareas
 
-- Registrar tareas con título, materia, fecha de entrega, prioridad y descripción opcional.
+- Registrar tareas con título, materia, fecha de entrega, hora opcional,
+  prioridad y descripción opcional.
 - Editar y eliminar tareas, con confirmación antes de borrar.
 - Marcar una tarea como terminada; queda registrada la fecha en que se completó.
 - Reabrir una tarea completada si hay que corregir algo.
@@ -53,8 +54,28 @@ No requiere instalación de paquetes ni proceso de compilación.
 ### Avance y recordatorios
 
 - Tarjeta de avance con el porcentaje de tareas completadas y barra de progreso.
-- Panel de recordatorios con las entregas vencidas, las de hoy y las de mañana.
-- Los recordatorios se actualizan al modificar tareas y se revisan cada minuto.
+- La hora de entrega es opcional; si se omite se usan las 8:00 a.m.
+- Avisos a **24 horas, 6 horas, 1 hora y 15 minutos** antes de la entrega.
+- El panel marca cada tarea con el umbral que ya cruzó, y señala las vencidas.
+- Con el permiso concedido, el navegador muestra una notificación por umbral,
+  sin repetirla en los siguientes minutos.
+- Las fechas se revisan cada minuto y al modificar cualquier tarea.
+
+> **Límite importante:** los avisos del navegador solo llegan mientras NOTIX
+> esté abierto. Programar notificaciones con la aplicación cerrada exigiría un
+> servidor con Push API, y NOTIX es una aplicación estática sin backend.
+> Para recibir avisos con la app cerrada, exporta la tarea a tu calendario.
+
+### Exportar al calendario
+
+Cada tarea pendiente tiene dos botones:
+
+- **📅 Google**: abre Google Calendar con el evento prellenado, listo para guardar.
+  Google aplica los recordatorios configurados en el calendario del usuario,
+  porque su enlace no admite avisos personalizados.
+- **⬇ .ics**: descarga un archivo iCalendar con los cuatro avisos incluidos
+  como bloques `VALARM`. Outlook y Apple Calendar los respetan. Google Calendar
+  importa el evento, pero descarta esos avisos.
 
 ### Perfil
 
@@ -107,6 +128,7 @@ También puedes usar la versión publicada en GitHub Pages.
 | `notix_usuarios_demo_v1` | Cuentas registradas, con sal y huella de contraseña |
 | `notix_sesion_demo_v1` | Identificador de la sesión activa (`sessionStorage`) |
 | `notix_tareas_<id>` | Tareas de cada cuenta |
+| `notix_avisos_<id>` | Avisos ya mostrados, para no repetirlos |
 | `notix_tema_preferido` | Tema claro u oscuro |
 
 ## Aviso sobre las cuentas
