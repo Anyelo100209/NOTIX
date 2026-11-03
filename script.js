@@ -47,15 +47,19 @@ function mostrarResumen() {
   const pendientes = tareas.length - terminadas;
   const porcentaje = tareas.length > 0 ? Math.round((terminadas / tareas.length) * 100) : 0;
 
-  document.getElementById('totalTareas').textContent = tareas.length;
-  document.getElementById('tareasPendientes').textContent = pendientes;
-  document.getElementById('tareasTerminadas').textContent = terminadas;
-  document.getElementById('porcentajeAvance').textContent = porcentaje + '%';
-  document.getElementById('progresoRelleno').style.width = porcentaje + '%';
-  document.getElementById('barraAvance').setAttribute('aria-valuenow', porcentaje);
-  document.getElementById('menuPendientes').textContent = pendientes;
-  document.getElementById('menuCompletadas').textContent = terminadas;
-  document.getElementById('cantidadCompletadas').textContent = terminadas;
+  const porcentajeAvance = document.getElementById('porcentajeAvance');
+  const progresoRelleno = document.getElementById('progresoRelleno');
+  const barraAvance = document.getElementById('barraAvance');
+  const menuPendientes = document.getElementById('menuPendientes');
+  const menuCompletadas = document.getElementById('menuCompletadas');
+  const cantidadCompletadas = document.getElementById('cantidadCompletadas');
+
+  if (porcentajeAvance) porcentajeAvance.textContent = porcentaje + '%';
+  if (progresoRelleno) progresoRelleno.style.width = porcentaje + '%';
+  if (barraAvance) barraAvance.setAttribute('aria-valuenow', porcentaje);
+  if (menuPendientes) menuPendientes.textContent = pendientes;
+  if (menuCompletadas) menuCompletadas.textContent = terminadas;
+  if (cantidadCompletadas) cantidadCompletadas.textContent = terminadas;
 }
 
 function formatoFecha(fechaTexto) {
