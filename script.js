@@ -503,3 +503,207 @@ document.getElementById('formularioIngreso').addEventListener('submit', async fu
 const idSesion = sessionStorage.getItem(CLAVE_SESION);
 const usuarioGuardado = obtenerUsuarios().find(item => item.id === idSesion);
 if (usuarioGuardado) activarUsuario(usuarioGuardado);
+
+
+// MODO OSCURO: recuerda la preferencia de tema en este navegador.
+const CLAVE_TEMA = 'notix_tema_preferido';
+const botonTema = document.getElementById('botonTema');
+const iconoTema = document.getElementById('iconoTema');
+const textoTema = document.getElementById('textoTema');
+
+function aplicarTema(tema) {
+  const modoOscuro = tema === 'oscuro';
+  document.documentElement.dataset.tema = modoOscuro ? 'oscuro' : 'claro';
+  iconoTema.textContent = modoOscuro ? '☀️' : '🌙';
+  textoTema.textContent = modoOscuro ? 'Modo claro' : 'Modo oscuro';
+  botonTema.setAttribute('aria-label', modoOscuro ? 'Activar modo claro' : 'Activar modo oscuro');
+  botonTema.setAttribute('aria-pressed', String(modoOscuro));
+}
+
+// Al abrir NOTIX, se recupera el último tema elegido.
+const temaGuardado = localStorage.getItem(CLAVE_TEMA) || 'claro';
+aplicarTema(temaGuardado);
+
+// Al pulsar el botón, se cambia el tema y se guarda la preferencia.
+botonTema.addEventListener('click', function() {
+  const temaActual = document.documentElement.dataset.tema;
+  const nuevoTema = temaActual === 'oscuro' ? 'claro' : 'oscuro';
+  aplicarTema(nuevoTema);
+  localStorage.setItem(CLAVE_TEMA, nuevoTema);
+});
+
+/* RECORDATORIOS DE NO TIX. */
+
+function actualizarRecordatorios() {
+  const panel = document.getElementById("recordatoriosNotix");
+  if (!panel) return;
+
+  const hoy = fechaEjemplo(0);
+  const manana = fechaEjemplo(1);
+
+  const pendientes = tareas.filter(tarea =>
+    !tarea.completada &&
+    tarea.fecha &&
+    tarea.fecha <= manana
+  );
+
+  pendientes.sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+  panel.replaceChildren();
+
+  if (pendientes.length === 0) {
+    const mensaje = document.createElement("p");
+    mensaje.textContent = "¡Estás al día! No tienes entregas próximas.";
+    panel.appendChild(mensaje);
+    return;
+  }
+
+  pendientes.forEach(tarea => {
+    const aviso = document.createElement("div");
+    aviso.className = "aviso-notix";
+
+    const titulo = document.createElement("strong");
+    titulo.textContent = tarea.titulo;
+
+    const estado = document.createElement("span");
+
+    if (tarea.fecha < hoy) {
+      estado.textContent = "🔴 Tarea vencida";
+    } else if (tarea.fecha === hoy) {
+      estado.textContent = "🟠 Entrega hoy";
+    } else {
+      estado.textContent = "🔵 Entrega mañana";
+    }
+
+    aviso.append(titulo, estado);
+    panel.appendChild(aviso);
+  });
+}
+
+// Crear la sección de recordatorios
+const seccionRecordatorios = document.createElement("section");
+seccionRecordatorios.className = "panel panel-recordatorios";
+
+const tituloRecordatorios = document.createElement("h2");
+tituloRecordatorios.textContent = "🔔 Recordatorios de entrega";
+
+const contenidoRecordatorios = document.createElement("div");
+contenidoRecordatorios.id = "recordatoriosNotix";
+
+seccionRecordatorios.append(
+  tituloRecordatorios,
+  contenidoRecordatorios
+);
+
+// Colocar la sección antes del resumen de tareas
+const resumen = document.querySelector(".resumen");
+
+if (resumen) {
+  resumen.parentNode.insertBefore(seccionRecordatorios, resumen);
+}
+
+// Actualizar al interactuar con las tareas
+document.addEventListener("click", () => {
+  setTimeout(actualizarRecordatorios, 100);
+});
+
+document.addEventListener("submit", () => {
+  setTimeout(actualizarRecordatorios, 100);
+});
+
+// Revisar periódicamente las fechas
+setInterval(actualizarRecordatorios, 60000);
+
+/* PERFIL DEL ESTUDIANTE */
+
+const modalPerfil = document.getElementById("modalPerfil");
+const abrirPerfil = document.getElementById("abrirPerfil");
+const cerrarPerfil = document.getElementById("cerrarPerfil");
+const formularioPerfil = document.getElementById("formularioPerfil");
+
+function mostrarPerfil() {
+  if (!usuarioActivo) return;
+
+  document.getElementById("nombrePerfil").value =
+    usuarioActivo.nombre;
+
+  document.getElementById("correoPerfil").value =
+    usuarioActivo.correo;
+
+  document.getElementById("metaPerfil").value =
+    usuarioActivo.metaSemanal || 5;
+
+  document.getElementById("perfilCompletadas").textContent =
+    tareas.filter(tarea => tarea.completada).length;
+
+  document.getElementById("perfilPendientes").textContent =
+    tareas.filter(tarea => !tarea.completada).length;
+
+  document.getElementById("mensajePerfil").textContent = "";
+
+  modalPerfil.classList.remove("oculto");
+  document.getElementById("nombrePerfil").focus();
+}
+
+abrirPerfil.addEventListener("click", mostrarPerfil);
+
+cerrarPerfil.addEventListener("click", function() {
+  modalPerfil.classList.add("oculto");
+  abrirPerfil.focus();
+});
+
+modalPerfil.addEventListener("click", function(evento) {
+  if (evento.target === modalPerfil) {
+    modalPerfil.classList.add("oculto");
+  }
+});
+
+document.addEventListener("keydown", function(evento) {
+  if (evento.key === "Escape" &&
+      !modalPerfil.classList.contains("oculto")) {
+    modalPerfil.classList.add("oculto");
+    abrirPerfil.focus();
+  }
+});
+
+formularioPerfil.addEventListener("submit", function(evento) {
+  evento.preventDefault();
+
+  if (!usuarioActivo) return;
+
+  const nombre =
+    document.getElementById("nombrePerfil").value.trim();
+
+  const meta =
+    Number(document.getElementById("metaPerfil").value);
+
+  if (!nombre || !Number.isInteger(meta) ||
+      meta < 1 || meta > 100) {
+    document.getElementById("mensajePerfil").textContent =
+      "Revisa el nombre y la meta semanal.";
+    return;
+  }
+
+  const usuarios = obtenerUsuarios();
+  const indice = usuarios.findIndex(
+    usuario => usuario.id === usuarioActivo.id
+  );
+
+  if (indice === -1) return;
+
+  usuarios[indice].nombre = nombre;
+  usuarios[indice].metaSemanal = meta;
+
+  localStorage.setItem(
+    CLAVE_USUARIOS,
+    JSON.stringify(usuarios)
+  );
+
+  usuarioActivo = usuarios[indice];
+
+  document.getElementById("usuarioSaludo").textContent =
+    "Hola, " + nombre;
+
+  document.getElementById("mensajePerfil").textContent =
+    "✓ Perfil actualizado correctamente";
+});
