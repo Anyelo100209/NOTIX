@@ -635,3 +635,103 @@ nav.navegacion-tareas {
     grid-template-columns: 1fr;
   }
 }
+
+/* =================================
+   META SEMANAL
+   ================================= */
+
+/* Bloque de la meta dentro del perfil */
+.perfil-meta {
+  margin-top: 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  background: #f7f9fd;
+  text-align: left;
+}
+
+.perfil-meta-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #263754;
+}
+
+.perfil-meta-encabezado strong {
+  font-size: 18px;
+  color: var(--azul);
+}
+
+/* La barra del perfil va sobre fondo claro, no sobre la tarjeta azul */
+.barra-meta {
+  background: #dfe6f4;
+  margin-top: 12px;
+}
+
+.barra-meta span {
+  background: var(--azul);
+}
+
+#perfilMetaRango {
+  display: block;
+  margin-top: 9px;
+  font-size: 11px;
+  color: var(--gris);
+}
+
+/* Aviso de la meta en el panel de recordatorios */
+.aviso-meta {
+  margin-bottom: 12px;
+  padding: 11px 14px;
+  border-radius: 11px;
+  border: 1px dashed #b9c8e6;
+  background: var(--azul-claro);
+  color: #263754;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.aviso-meta-cumplida {
+  border-style: solid;
+  border-color: #9fd8b4;
+  background: #e8f8ee;
+  color: #1c6b3c;
+}
+
+/* Modo oscuro */
+:root[data-tema="oscuro"] .perfil-meta {
+  background: #172337;
+  border-color: #44536b;
+}
+
+:root[data-tema="oscuro"] .perfil-meta-encabezado {
+  color: #f1f5ff;
+}
+
+:root[data-tema="oscuro"] .barra-meta {
+  background: #2d3b54;
+}
+
+:root[data-tema="oscuro"] .aviso-meta {
+  background: #25334b;
+  border-color: #44536b;
+  color: #f1f5ff;
+}
+
+:root[data-tema="oscuro"] .aviso-meta-cumplida {
+  background: #1d3a2a;
+  border-color: #2f7a52;
+  color: #c8f3d8;
+}
+
+/* Adaptación a celulares */
+@media (max-width: 600px) {
+  .perfil-meta-encabezado {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}

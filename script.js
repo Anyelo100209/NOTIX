@@ -15,13 +15,62 @@ let tareaEnEdicion = null;
 let usuarioActivo = null;
 
 // Cada cuenta guarda sus tareas bajo una clave distinta.
-function fechaEjemplo(dias) {
-  const fecha = new Date();
-  fecha.setDate(fecha.getDate() + dias);
+function textoFecha(fecha) {
   const anio = fecha.getFullYear();
   const mes = String(fecha.getMonth() + 1).padStart(2, '0');
   const dia = String(fecha.getDate()).padStart(2, '0');
   return `${anio}-${mes}-${dia}`;
+}
+
+function fechaEjemplo(dias) {
+  const fecha = new Date();
+  fecha.setDate(fecha.getDate() + dias);
+  return textoFecha(fecha);
+}
+
+/* META SEMANAL */
+
+// La semana académica va de lunes a domingo.
+function rangoSemana() {
+  const hoy = new Date();
+  const diaActual = hoy.getDay();
+  const diasDesdeLunes = diaActual === 0 ? 6 : diaActual - 1;
+
+  const lunes = new Date(hoy);
+  lunes.setDate(hoy.getDate() - diasDesdeLunes);
+
+  const domingo = new Date(lunes);
+  domingo.setDate(lunes.getDate() + 6);
+
+  return { inicio: textoFecha(lunes), fin: textoFecha(domingo) };
+}
+
+// Si la cuenta no tiene meta válida, se usan 5 tareas por semana.
+function metaSemanal() {
+  const valor = Number(usuarioActivo && usuarioActivo.metaSemanal);
+  const valida = Number.isInteger(valor) && valor >= 1 && valor <= 100;
+  return valida ? valor : 5;
+}
+
+// Cuenta las tareas terminadas dentro de la semana en curso.
+function avanceSemanal() {
+  const semana = rangoSemana();
+  const meta = metaSemanal();
+
+  const completadas = tareas.filter(tarea =>
+    tarea.completada &&
+    tarea.fechaCompletada &&
+    tarea.fechaCompletada >= semana.inicio &&
+    tarea.fechaCompletada <= semana.fin
+  ).length;
+
+  return {
+    completadas,
+    meta,
+    faltan: Math.max(0, meta - completadas),
+    porcentaje: Math.min(100, Math.round((completadas / meta) * 100)),
+    cumplida: completadas >= meta
+  };
 }
 
 function claveTareas() {
@@ -558,6 +607,25 @@ function actualizarRecordatorios() {
 
   panel.replaceChildren();
 
+  // El aviso de la meta se muestra siempre, haya entregas próximas o no.
+  const avance = avanceSemanal();
+  const avisoMeta = document.createElement("div");
+  avisoMeta.className = "aviso-meta";
+
+  if (avance.cumplida) {
+    avisoMeta.classList.add("aviso-meta-cumplida");
+    avisoMeta.textContent =
+      '🎉 Meta semanal cumplida: ' + avance.completadas +
+      ' de ' + avance.meta + ' tareas.';
+  } else if (avance.faltan === 1) {
+    avisoMeta.textContent = 'Te falta 1 tarea para tu meta semanal.';
+  } else {
+    avisoMeta.textContent =
+      'Te faltan ' + avance.faltan + ' tareas para tu meta semanal.';
+  }
+
+  panel.appendChild(avisoMeta);
+
   if (pendientes.length === 0) {
     const mensaje = document.createElement("p");
     mensaje.textContent = "¡Estás al día! No tienes entregas próximas.";
@@ -626,6 +694,34 @@ const abrirPerfil = document.getElementById("abrirPerfil");
 const cerrarPerfil = document.getElementById("cerrarPerfil");
 const formularioPerfil = document.getElementById("formularioPerfil");
 
+// Pinta el avance de la meta dentro del perfil.
+function mostrarAvanceSemanal() {
+  const avance = avanceSemanal();
+  const semana = rangoSemana();
+
+  const texto = document.getElementById("perfilMetaTexto");
+  const porcentaje = document.getElementById("perfilMetaPorcentaje");
+  const barra = document.getElementById("perfilMetaBarra");
+  const relleno = document.getElementById("perfilMetaRelleno");
+  const rango = document.getElementById("perfilMetaRango");
+
+  if (texto) {
+    texto.textContent = avance.cumplida
+      ? `🎉 Meta cumplida: ${avance.completadas} de ${avance.meta} tareas`
+      : `Meta semanal: ${avance.completadas} de ${avance.meta} tareas`;
+  }
+
+  if (porcentaje) porcentaje.textContent = avance.porcentaje + '%';
+  if (relleno) relleno.style.width = avance.porcentaje + '%';
+  if (barra) barra.setAttribute('aria-valuenow', avance.porcentaje);
+
+  if (rango) {
+    rango.textContent =
+      'Semana del ' + formatoFecha(semana.inicio) +
+      ' al ' + formatoFecha(semana.fin);
+  }
+}
+
 function mostrarPerfil() {
   if (!usuarioActivo) return;
 
@@ -635,14 +731,15 @@ function mostrarPerfil() {
   document.getElementById("correoPerfil").value =
     usuarioActivo.correo;
 
-  document.getElementById("metaPerfil").value =
-    usuarioActivo.metaSemanal || 5;
+  document.getElementById("metaPerfil").value = metaSemanal();
 
   document.getElementById("perfilCompletadas").textContent =
     tareas.filter(tarea => tarea.completada).length;
 
   document.getElementById("perfilPendientes").textContent =
     tareas.filter(tarea => !tarea.completada).length;
+
+  mostrarAvanceSemanal();
 
   document.getElementById("mensajePerfil").textContent = "";
 
@@ -708,6 +805,10 @@ formularioPerfil.addEventListener("submit", function(evento) {
 
   document.getElementById("usuarioSaludo").textContent =
     "Hola, " + nombre;
+
+  // La nueva meta se refleja de inmediato en el perfil y en los avisos.
+  mostrarAvanceSemanal();
+  actualizarRecordatorios();
 
   document.getElementById("mensajePerfil").textContent =
     "✓ Perfil actualizado correctamente";

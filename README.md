@@ -53,6 +53,17 @@ No requiere instalación de paquetes ni proceso de compilación.
 - Modal de perfil con el correo de la cuenta y el conteo de tareas pendientes y completadas.
 - Permite cambiar el nombre visible y definir una meta semanal de tareas.
 
+### Meta semanal
+
+- La meta se define en el perfil, entre 1 y 100 tareas por semana.
+- La semana va de **lunes a domingo** y se calcula con la fecha en que se
+  completó cada tarea.
+- El perfil muestra el avance, el porcentaje, una barra de progreso y el rango
+  de fechas de la semana en curso.
+- El panel de recordatorios indica cuántas tareas faltan para la meta, o avisa
+  cuando ya está cumplida.
+- Las cuentas sin meta definida usan 5 tareas por semana.
+
 ### Interfaz
 
 - Tema claro y oscuro, con la preferencia guardada entre sesiones.
@@ -103,8 +114,6 @@ No debe usarse con contraseñas reales ni con información sensible.
 
 - **Tablero Kanban**: la interfaz con las columnas *Por hacer*, *En proceso* y
   *Completadas* ya está maquetada, pero todavía no se alimenta con las tareas.
-- **Meta semanal**: se puede guardar desde el perfil, pero aún no influye en el
-  cálculo de avance ni genera avisos.
 
 ## Integrantes
 
